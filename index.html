@@ -140,6 +140,9 @@ button.chip.on{background:var(--carbon);border-color:var(--carbon);color:var(--o
 .reg-note{font-size:.78rem;color:var(--ink-2)}
 .rep{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,11em);gap:10px 12px;padding:12px;border:1px solid var(--rule);border-radius:10px;background:var(--paper)}
 .rep h4{grid-column:1/-1;margin:0;font:700 .95rem var(--f-body)}
+.dir{display:grid;gap:8px;padding:12px;border:1px solid var(--rule);border-radius:10px;background:var(--paper)}
+.dir h4{margin:0;font:700 .95rem var(--f-body)}
+.dir .reg-note{margin:0}
 .rep .wide{grid-column:1/-1}
 @media (max-width:520px){.rep{grid-template-columns:1fr}}
 .banner .btn{font-size:.82rem;padding:6px 10px;margin-left:auto;flex:none}
@@ -303,12 +306,17 @@ textarea.fallback{width:100%;min-height:120px;font:.75rem var(--f-num);backgroun
         <button class="btn" id="btnBackup" type="button">Copie de siguranță</button>
         <label class="btn" for="fileRestore">Restaurează din copie<input class="vh" id="fileRestore" type="file" accept=".json,.txt,application/json,text/plain"></label>
       </div>
+      <div class="dir" id="dirBox" hidden>
+        <h4>Unde se salvează fișierele</h4>
+        <p class="reg-note" id="dirNote"></p>
+        <div class="reg-actions"><button class="btn" id="btnDir" type="button">Alege dosarul pentru NIR-uri</button><button class="btn" id="btnDirOff" type="button" hidden>Înapoi la Descărcări</button></div>
+      </div>
       <p class="reg-note" id="regNote">Registrul și prețurile de raft stau în browserul de pe acest dispozitiv. Copia de siguranță pleacă lunar odată cu raportul, dacă e bifată; o poți descărca și oricând de aici. Folosește programul pe un singur dispozitiv: telefonul, calculatorul și Secure Folder au fiecare registrul lor, iar două registre nu se pot amesteca. Un NIR emis nu se șterge: se corectează doar prin storno.</p>
     </div>
   </details>
 
   <div class="notes">
-    <p>Prețul de raft = preț de achiziție fără TVA + adaos, plus TVA-ul produsului, rotunjit o singură dată la 10 bani, la cel mai apropiat: 1,92 devine 1,90, iar 1,95 devine 2,00. Adaosul se recalculează după prețul rotunjit, deci poate ieși puțin peste sau puțin sub 30%.</p>
+    <p>Prețul de raft = preț de achiziție fără TVA + adaos, plus TVA-ul produsului, rotunjit o singură dată la 10 bani, la cel mai apropiat: 1,92 devine 1,90, iar 1,95 devine 2,00. Adaosul se recalculează după prețul rotunjit, deci poate ieși puțin peste sau puțin sub adaosul standard (20%, îl schimbi la „Date NIR”).</p>
     <p>Pentru cele 17 grupe de alimente de bază din OUG 67/2023, adaosul e plafonat la 20% față de prețul de achiziție până la 31.12.2026. La ele prețul se rotunjește mereu în jos, deci adaosul rămâne sub 20%. Un produs care seamănă cu unul de pe listă, dar nu sigur, primește tot 20% și e marcat. Îl confirmi o singură dată, iar pagina ține minte.</p>
     <p>Un retur (cantitate cu minus) intră pe NIR cu minus, la prețul de raft cu care a intrat. O reducere fără cantitate scade costul, dar nu schimbă prețul de raft; la produsele plafonate prețul se calculează din costul redus.</p>
     <p>Produsele care vin la bucată, dar le vinzi la kilogram: atinge „Vând la kg”. Greutatea se citește din denumire (6KG, 1200G) și se poate corecta; alegerea rămâne ținută minte pentru acel produs.</p>
@@ -371,7 +379,7 @@ const saved = loadStore();
 const STEPS = [0.01, 0.05, 0.1, 0.5, 1];
 const S = {
   inv: null, example: true, open: null, force: false,
-  pct: typeof saved.pct === 'number' ? saved.pct : 30,
+  pct: typeof saved.pct === 'number' ? saved.pct : 20,
   step: STEPS.includes(saved.step) ? saved.step : 0.1,
   risePct: typeof saved.risePct === 'number' ? saved.risePct : 5,
   overrides: saved.overrides && typeof saved.overrides === 'object' ? saved.overrides : {},
@@ -851,6 +859,8 @@ async function loadRegister(){
 
 /* ---------------- NIR calculation ---------------- */
 const SVC_RE = /\b(transport|livrare|taxa (de )?(livrare|transport|ambalare|manipulare|expediere)|cost(uri)? (de )?(transport|livrare)|servicii|serviciu|manipulare|curierat|expediere|logistica)\b/;
+// prepaid top-ups, phone cards and vouchers are bought to be resold on the shop's own fiscal receipt: goods, even when the supplier calls them a service
+const RESALE_RE = /\b(reincarcar\w*|cartel[ae]\w*|voucher\w*|top ?up|prepay|prepaid|credit (telefon|mobil|prepay|prepaid))\b/;
 const PKG_RE = /\b(navet[ae]|navete|lazi|palet|paleti|europalet|ambalaj(e)? (returnabil|reutilizabil)\w*)\b/;
 const FREE_RE = /\b(gratuit|gratuitate|gratis|bonus|cadou)\b/g;
 const DISC_RE = /\b(discount|reducere|reduceri|rabat|remiza|bonificatie|bonificatii|scont|dto)\b/;
@@ -858,7 +868,7 @@ const TOBACCO_RE = /\b(tigar(et)?e|tigari|cigarete|tigarillo|tutun|marlboro|kent
 // a discount for earlier purchases (volume bonus, monthly rebate) stays out of the NIR: the accountant books it separately
 const PAST_RE = /\b(volum|lunar|lunara|luna|lunii|trimestr\w*|anual\w*|target|prag|retroactiv\w*|campanie|perioada|ianuarie|februarie|martie|aprilie|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie|cumparaturi|achizitii|rulaj)\b/;
 const DISC_LABEL = {disc: 'Reducere la marfa de pe factură: scade costul', discPast: 'Reducere pentru cumpărături anterioare: nu intră în NIR'};
-const KIND_LABEL = {goods: 'Marfă: intră la raft', service: 'Transport / serviciu: intră în costul mărfii', packaging: 'Ambalaj facturat: cont 381, nu intră la raft', deposit: 'Garanție SGR: fără adaos, fără TVA'};
+const KIND_LABEL = {goods: 'Marfă sau revândut pe bon: intră în NIR', service: 'Transport / serviciu: intră în costul mărfii', packaging: 'Ambalaj facturat: cont 381, nu intră la raft', deposit: 'Garanție SGR: fără adaos, fără TVA'};
 const digits = s => String(s || '').replace(/\D/g, '');
 function invKey(inv){ return digits(inv.supplier && inv.supplier.cui) + '|' + String(inv.number || '').toUpperCase().replace(/\s+/g, ''); }
 function priceKey(code, key){ return code ? 'c:' + code : 'n:' + key; }
@@ -870,6 +880,7 @@ function lineKind(l, key, credit){
   if (o && KIND_LABEL[o.kind]) return o.kind;
   if (o && DISC_LABEL[o.kind] && l.net < 0) return o.kind;
   if (isDeposit(l, key)) return 'deposit';
+  if (RESALE_RE.test(key) && l.net >= 0) return 'goods';
   if (SVC_RE.test(key)) return 'service';
   if (PKG_RE.test(key)) return 'packaging';
   const discName = DISC_RE.test(key) || (/\bbonus\b/.test(key) && PAST_RE.test(key));   // "bonus volum" with a minus is a rebate, not a return
@@ -1087,7 +1098,7 @@ function compute(inv){
   // what stops the NIR
   const real = !S.example;
   const dupRec = real ? REG.find(r => r.invKey === invKey(inv) && r.status === 'emis' && !r.stornoOf) || null : null;
-  if (!rows.length) hard.push(allocs.length ? 'Factura conține doar reduceri de preț, fără marfă. Nu se face NIR: dă-o contabilei, care o înregistrează direct.' : svc.length ? 'Factura conține doar transport sau servicii, fără marfă. Nu se face NIR: dă-o contabilei.' : 'Factura nu conține marfă de recepționat.');
+  if (!rows.length) hard.push(allocs.length ? 'Factura conține doar reduceri de preț, fără marfă. Nu se face NIR: dă-o contabilei, care o înregistrează direct.' : svc.length ? 'Factura conține doar transport sau servicii, fără marfă. Nu se face NIR: dă-o contabilei. Dacă îl revinzi pe bonul tău fiscal, alege mai jos, la „Alte rânduri”, „Marfă sau revândut pe bon”.' : 'Factura nu conține marfă de recepționat.');
   const co = S.company && digits(S.company.cui), buyer = inv.buyer || {}, bd = digits(buyer.cui);
   if (real && co && bd && bd !== co) hard.push('Factura e emisă pe ' + (buyer.name || 'altă firmă') + ' (CUI ' + buyer.cui + '), nu pe firma ta ' + (S.company.name || '') + ' (CUI ' + S.company.cui + '). Nu se face NIR pe magazin.');
   if (real && co && !bd) soft.push('CUI-ul cumpărătorului nu apare pe factură. Verifică dacă e emisă pe firma ta.');
@@ -1180,7 +1191,8 @@ function stornoModel(m, nr){
 /* ---------------- render ---------------- */
 let C = null;
 function setStatus(msg, kind){ const el = $('#status'); el.className = 'status' + (kind ? ' ' + kind : ''); el.innerHTML = msg || ''; }
-function toast(msg, kind){ const el = $('#toast'); el.className = 'toast' + (kind ? ' ' + kind : ''); el.textContent = msg || ''; }
+var SAVE_NOTE = '';   // set by saveBlob, appended to the next success message
+function toast(msg, kind){ if (SAVE_NOTE && kind !== 'bad') { msg = (msg || '') + ' ' + SAVE_NOTE; SAVE_NOTE = ''; } const el = $('#toast'); el.className = 'toast' + (kind ? ' ' + kind : ''); el.textContent = msg || ''; }
 const lei = x => m2(x) + ' lei';
 
 function render(){
@@ -2066,6 +2078,34 @@ async function renderPreview(){
 
 /* ---------------- files out ---------------- */
 let downloads = null;
+// optional save folder chosen by the user (File System Access: Chrome 132+ on Android, Chrome/Edge on computers)
+const DIR = (() => {
+  const ok = !window.claude && typeof window.showDirectoryPicker === 'function';
+  let handle = null;
+  const db = () => new Promise((res, rej) => { const r = indexedDB.open('nir-rapid-dir', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const tx = (mode, fn) => db().then(d => new Promise((res, rej) => { const t = d.transaction('h', mode), q = fn(t.objectStore('h')); t.oncomplete = () => { d.close(); res(q && q.result); }; t.onerror = t.onabort = () => { d.close(); rej(t.error); }; }));
+  const RW = {mode: 'readwrite'};
+  return {
+    ok, get set(){ return !!handle; }, get name(){ return handle ? handle.name : ''; },
+    async load(){ if (!ok) return; try { const h = await tx('readonly', s => s.get('dir')); handle = h && typeof h.getFileHandle === 'function' ? h : null; } catch (e) { handle = null; } },
+    async pick(){
+      const h = await window.showDirectoryPicker({id: 'nir-rapid', mode: 'readwrite', startIn: 'documents'});
+      if (h.requestPermission && (await h.requestPermission(RW)) !== 'granted') throw new Error('denied');
+      await tx('readwrite', s => s.put(h, 'dir')); handle = h;
+    },
+    async clear(){ handle = null; try { await tx('readwrite', s => s.delete('dir')); } catch (e) {} },
+    // asked right at the tap, while it still counts as the user's own gesture (Android may ask again after the app restarts)
+    async grant(){ if (!handle) return false; try { if (!handle.queryPermission || (await handle.queryPermission(RW)) === 'granted') return true; return (await handle.requestPermission(RW)) === 'granted'; } catch (e) { return false; } },
+    async write(filename, blob){ const fh = await handle.getFileHandle(filename, {create: true}); const w = await fh.createWritable(); try { await w.write(blob); await w.close(); } catch (e) { try { await w.abort(); } catch (x) {} throw e; } }
+  };
+})();
+function renderDir(){
+  $('#dirBox').hidden = !DIR.ok;
+  if (!DIR.ok) return;
+  $('#dirNote').textContent = DIR.set ? 'NIR-urile, lista-jurnal și copiile de siguranță se salvează în dosarul „' + DIR.name + '”. Dacă telefonul cere din nou voie, apasă „Permite”.' : 'Acum fișierele merg în Descărcări (Download). Poți alege un dosar al tău, de exemplu un dosar „NIR” în Documente.';
+  $('#btnDir').textContent = DIR.set ? 'Schimbă dosarul' : 'Alege dosarul pentru NIR-uri';
+  $('#btnDirOff').hidden = !DIR.set;
+}
 function slug(s){ return norm(s).replace(/\b(s\.?r\.?l\.?|s\.?a\.?)(?=\s|$)/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'furnizor'; }
 function modelFileName(M, ext){ return 'NIR-' + ((M.serie ? M.serie + '-' : '') + (M.nr || 'fara-nr')).replace(/[^\w-]+/g, '') + (M.storno ? '-storno' : '') + '_' + slug(M.sup.name) + '_fact-' + (M.inv.number || '').replace(/[^\w-]+/g, '').slice(0, 20) + '.' + ext; }
 async function saveBlob(filename, blob){
@@ -2074,6 +2114,13 @@ async function saveBlob(filename, blob){
     if (!dl) throw {code: 'unavailable'};
     const res = await dl.save({filename, data: blob});
     return res && res.status === 'saved';
+  }
+  // a folder chosen by the user; if it cannot be written, the file still goes to Downloads
+  if (DIR.set) {
+    if (await DIR.grant()) {
+      try { await DIR.write(filename, blob); SAVE_NOTE = 'Salvat în dosarul „' + DIR.name + '”.'; return true; } catch (e) {}
+    }
+    SAVE_NOTE = 'Nu am putut scrie în dosarul „' + DIR.name + '”; fișierul e în Descărcări.';
   }
   // standalone file opened in a normal browser
   const url = URL.createObjectURL(blob), a = document.createElement('a');
@@ -2104,6 +2151,7 @@ async function downloadModel(M, kind){
 let busy = false;
 async function issue(kind){
   if (!S.inv || !C || busy) return;
+  if (DIR.set) await DIR.grant();
   const what = kind === 'pdf' ? 'PDF' : 'Excel';
   if (C.dupRec) { try { await downloadModel(C.dupRec.model, kind); toast('NIR nr. ' + C.dupRec.nr + ' descărcat din registru (' + what + ').', 'ok'); } catch (e) { saveErr(e, what); } return; }
   if (S.loadFailed || C.hard.length || (C.soft.length && !forced())) return;
@@ -2371,6 +2419,12 @@ $('#repMonth').addEventListener('change', e => { repSel = e.target.value; });
 $('#btnReport').addEventListener('click', () => sendReport(repSel || $('#repMonth').value));
 
 /* ---------------- installed on the phone (outside Claude) ---------------- */
+$('#btnDir').addEventListener('click', async () => {
+  try { await DIR.pick(); renderDir(); toast('Gata: fișierele se salvează de acum în dosarul „' + DIR.name + '”.', 'ok'); }
+  catch (e) { if (e && e.name === 'AbortError') return; toast('Dosarul nu a putut fi ales. Fișierele merg în continuare în Descărcări.', 'bad'); }
+});
+$('#btnDirOff').addEventListener('click', async () => { await DIR.clear(); renderDir(); toast('Fișierele merg din nou în Descărcări (Download).', 'ok'); });
+renderDir(); DIR.load().then(renderDir);
 if (!window.claude) {
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
