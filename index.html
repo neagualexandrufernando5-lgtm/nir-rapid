@@ -1262,6 +1262,7 @@ function render(){
     '<p>Nu intră în NIR și nu primește adaos sau TVA. La raft și pe bon se afișează separat: prețul produsului plus ' + m2(C.sgrRows[0] ? Math.abs(C.sgrRows[0].unit) : 0.5) + ' lei garanție. În casa de marcat garanția e articol separat, scutit de TVA.</p>';
 
   renderRegister();
+  try { renderDir(); } catch (e) {}   // the folder note shows this NIR's month; DIR exists only once the page has finished loading
   schedulePreview();
   $('#barTotal').textContent = lei(C.totals.val);
   updateButtons();
@@ -2085,7 +2086,17 @@ const DIR = (() => {
   const db = () => new Promise((res, rej) => { const r = indexedDB.open('nir-rapid-dir', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
   const tx = (mode, fn) => db().then(d => new Promise((res, rej) => { const t = d.transaction('h', mode), q = fn(t.objectStore('h')); t.oncomplete = () => { d.close(); res(q && q.result); }; t.onerror = t.onabort = () => { d.close(); rej(t.error); }; }));
   const RW = {mode: 'readwrite'};
+  const safe = n => String(n).replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const cap1 = w => w ? w.charAt(0).toUpperCase() + w.slice(1) : '';
+  const MON = ['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie', 'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'];
+  // "POPESCU COM S.R.L." -> "NIR-uri Popescu"
+  const mainName = () => { const w = norm((S.company && S.company.name) || '').replace(/[^a-z0-9 ]+/g, ' ').trim().split(' ')[0] || ''; return safe('NIR-uri' + (w ? ' ' + cap1(w) : '')); };
+  const monthDir = ym => { const m = /^(\d{4})-(\d{2})/.exec(ym || ''); return m && +m[2] >= 1 && +m[2] <= 12 ? 'NIR-uri ' + MON[+m[2] - 1] + ' ' + m[1] : ''; };
+  // a folder the user already named "NIR..." is the main folder itself; any other folder (e.g. Documente) gets the main folder made inside it
+  const isMain = () => /^nir/.test(norm(handle.name));
+  const mainLabel = () => isMain() ? handle.name : handle.name + ' / ' + mainName();
   return {
+    monthDir, mainLabel, get mainIsPicked(){ return !!handle && isMain(); },
     ok, get set(){ return !!handle; }, get name(){ return handle ? handle.name : ''; },
     async load(){ if (!ok) return; try { const h = await tx('readonly', s => s.get('dir')); handle = h && typeof h.getFileHandle === 'function' ? h : null; } catch (e) { handle = null; } },
     async pick(){
@@ -2096,19 +2107,25 @@ const DIR = (() => {
     async clear(){ handle = null; try { await tx('readwrite', s => s.delete('dir')); } catch (e) {} },
     // asked right at the tap, while it still counts as the user's own gesture (Android may ask again after the app restarts)
     async grant(){ if (!handle) return false; try { if (!handle.queryPermission || (await handle.queryPermission(RW)) === 'granted') return true; return (await handle.requestPermission(RW)) === 'granted'; } catch (e) { return false; } },
-    async write(filename, blob){ const fh = await handle.getFileHandle(filename, {create: true}); const w = await fh.createWritable(); try { await w.write(blob); await w.close(); } catch (e) { try { await w.abort(); } catch (x) {} throw e; } }
+    // returns where the file went, e.g. "NIR-uri Popescu / NIR-uri Octombrie 2026"
+    async write(filename, blob, ym){
+      const main = isMain() ? handle : await handle.getDirectoryHandle(mainName(), {create: true});
+      const mdir = monthDir(ym), dir = mdir ? await main.getDirectoryHandle(mdir, {create: true}) : main;
+      const fh = await dir.getFileHandle(filename, {create: true}); const w = await fh.createWritable(); try { await w.write(blob); await w.close(); } catch (e) { try { await w.abort(); } catch (x) {} throw e; }
+      return (isMain() ? handle.name : mainName()) + (mdir ? ' / ' + mdir : '');
+    }
   };
 })();
 function renderDir(){
   $('#dirBox').hidden = !DIR.ok;
   if (!DIR.ok) return;
-  $('#dirNote').textContent = DIR.set ? 'NIR-urile, lista-jurnal și copiile de siguranță se salvează în dosarul „' + DIR.name + '”. Dacă telefonul cere din nou voie, apasă „Permite”.' : 'Acum fișierele merg în Descărcări (Download). Poți alege un dosar al tău, de exemplu un dosar „NIR” în Documente.';
+  $('#dirNote').textContent = DIR.set ? 'Fiecare NIR se salvează în „' + DIR.mainLabel() + ' / ' + DIR.monthDir(S.nirDate || today()) + '”: câte un dosar pe lună, după data NIR-ului, făcut automat la primul NIR din lună. Lista-jurnal și copiile de siguranță stau direct în „' + DIR.mainLabel() + '”. Dacă telefonul cere din nou voie, apasă „Permite”.' : 'Acum fișierele merg în Descărcări (Download). Alege un dosar, de exemplu Documente: aplicația face în el „NIR-uri” cu numele firmei și, înăuntru, câte un dosar pe lună.';
   $('#btnDir').textContent = DIR.set ? 'Schimbă dosarul' : 'Alege dosarul pentru NIR-uri';
   $('#btnDirOff').hidden = !DIR.set;
 }
 function slug(s){ return norm(s).replace(/\b(s\.?r\.?l\.?|s\.?a\.?)(?=\s|$)/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'furnizor'; }
 function modelFileName(M, ext){ return 'NIR-' + ((M.serie ? M.serie + '-' : '') + (M.nr || 'fara-nr')).replace(/[^\w-]+/g, '') + (M.storno ? '-storno' : '') + '_' + slug(M.sup.name) + '_fact-' + (M.inv.number || '').replace(/[^\w-]+/g, '').slice(0, 20) + '.' + ext; }
-async function saveBlob(filename, blob){
+async function saveBlob(filename, blob, ym){
   if (window.claude && typeof window.claude.use === 'function') {
     const dl = downloads || await window.claude.use('downloads');
     if (!dl) throw {code: 'unavailable'};
@@ -2118,7 +2135,7 @@ async function saveBlob(filename, blob){
   // a folder chosen by the user; if it cannot be written, the file still goes to Downloads
   if (DIR.set) {
     if (await DIR.grant()) {
-      try { await DIR.write(filename, blob); SAVE_NOTE = 'Salvat în dosarul „' + DIR.name + '”.'; return true; } catch (e) {}
+      try { const where = await DIR.write(filename, blob, ym); SAVE_NOTE = 'Salvat în „' + where + '”.'; return true; } catch (e) {}
     }
     SAVE_NOTE = 'Nu am putut scrie în dosarul „' + DIR.name + '”; fișierul e în Descărcări.';
   }
@@ -2144,7 +2161,7 @@ function buildTsv(M){
   return out.join('\n');
 }
 async function downloadModel(M, kind){
-  return saveBlob(modelFileName(M, kind === 'pdf' ? 'pdf' : 'xlsx'), kind === 'pdf' ? await buildNirPdf(M) : buildXlsx(M));
+  return saveBlob(modelFileName(M, kind === 'pdf' ? 'pdf' : 'xlsx'), kind === 'pdf' ? await buildNirPdf(M) : buildXlsx(M), M.example ? '' : M.date);
 }
 
 /* ---------------- issuing a NIR ---------------- */
@@ -2379,9 +2396,9 @@ async function sendReport(ym){
         // any other failure: fall through to download + mailto
       }
     }
-    for (const f of R.files) { try { await saveBlob(f.name, f); } catch (e) { saveErr(e, f.name.split('.').pop().toUpperCase()); return; } }
+    for (const f of R.files) { try { await saveBlob(f.name, f, R.ym); } catch (e) { saveErr(e, f.name.split('.').pop().toUpperCase()); return; } }
     openMail(R.email, R.title, R.text.replace('Atașez', 'Vă trimit atașat'));
-    toast('Fișierele raportului s-au salvat în Descărcări. Se deschide un email către ' + R.email + ': atașează cele ' + R.files.length + ' fișiere și trimite. După ce l-ai trimis, apasă sus „Le-am trimis deja”.', 'ok');
+    toast('Fișierele raportului s-au salvat' + (DIR.set ? '' : ' în Descărcări') + '. Se deschide un email către ' + R.email + ': atașează cele ' + R.files.length + ' fișiere și trimite. După ce l-ai trimis, apasă sus „Le-am trimis deja”.', 'ok');
   } finally { repBusy = false; btn.disabled = false; }
 }
 function renderReport(){
@@ -2420,7 +2437,7 @@ $('#btnReport').addEventListener('click', () => sendReport(repSel || $('#repMont
 
 /* ---------------- installed on the phone (outside Claude) ---------------- */
 $('#btnDir').addEventListener('click', async () => {
-  try { await DIR.pick(); renderDir(); toast('Gata: fișierele se salvează de acum în dosarul „' + DIR.name + '”.', 'ok'); }
+  try { await DIR.pick(); renderDir(); toast('Gata: NIR-urile se salvează de acum în „' + DIR.mainLabel() + '”, câte un dosar pe lună.', 'ok'); }
   catch (e) { if (e && e.name === 'AbortError') return; toast('Dosarul nu a putut fi ales. Fișierele merg în continuare în Descărcări.', 'bad'); }
 });
 $('#btnDirOff').addEventListener('click', async () => { await DIR.clear(); renderDir(); toast('Fișierele merg din nou în Descărcări (Download).', 'ok'); });
