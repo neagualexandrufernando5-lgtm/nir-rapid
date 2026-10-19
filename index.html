@@ -152,6 +152,8 @@ button.chip.on{background:var(--carbon);border-color:var(--carbon);color:var(--o
 .q-grp{margin-top:14px}
 .q-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:.92rem}
 .q-head span{font-size:.82rem;color:var(--ink-2)}
+.ask{margin-top:10px;padding:12px;border:1px solid var(--amber);border-radius:10px;background:var(--amber-soft);color:var(--ink)}
+.ask p{margin:0;font-size:.9rem;line-height:1.45}
 .q-why{color:var(--bad);font-size:.8rem;line-height:1.35}
 .btn.danger{border-color:var(--bad);color:var(--bad)}
 @media (max-width:520px){.q-item{grid-template-columns:minmax(0,1fr) auto}.q-item .chip{grid-column:2}}
@@ -213,6 +215,51 @@ tr.tot td{font-weight:500;background:var(--carbon-soft)}
 .toast.ok{color:var(--ok)}
 .toast.bad{color:var(--bad)}
 textarea.fallback{width:100%;min-height:120px;font:.75rem var(--f-num);background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:8px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--rule);margin-top:-6px}
+.tabs button{flex:1;padding:10px 6px;font:600 .95rem var(--f-body);background:none;border:0;border-bottom:3px solid transparent;color:var(--ink-2);cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--carbon)}
+.tabpane{display:flex;flex-direction:column;gap:18px}
+.tabpane[hidden]{display:none}
+body[data-tab="casa"] .bar-row,body[data-tab="gest"] .bar-row{display:none}
+body[data-tab="casa"] .bar:has(.toast:empty),body[data-tab="gest"] .bar:has(.toast:empty){display:none}
+.card{display:grid;gap:10px;padding:14px;border:1px solid var(--rule);border-radius:10px;background:var(--sheet)}
+.card h3{margin:0;font:700 1rem var(--f-body)}
+.card .reg-note{margin:0}
+details.card:not([open]){gap:0}
+details.card summary{cursor:pointer}
+body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+.day-nav{display:flex;gap:8px;align-items:center}
+.day-nav input{flex:1}
+.c-list{list-style:none;margin:0;padding:0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--paper)}
+.c-list:empty{display:none}
+.c-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 10px;align-items:center;padding:9px 12px}
+.c-row + .c-row{border-top:1px solid var(--rule)}
+.c-row small{display:block;color:var(--ink-2);font-size:.75rem}
+.c-amt{font:600 .92rem var(--f-num);white-space:nowrap}
+.c-sum{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;font-size:.92rem}
+.c-sum span:nth-child(even){font:500 .95rem var(--f-num);text-align:right}
+.c-sum .fin{font-weight:700;border-top:1px solid var(--rule);padding-top:6px}
+.c-warn{color:var(--bad);font-size:.85rem;margin:0}
+.c-info{color:var(--ink-2);font-size:.85rem;margin:0}
+.pick{max-height:320px;overflow:auto}
+.pick button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;width:100%;text-align:left;padding:9px 12px;background:none;border:0;border-top:1px solid var(--rule);color:inherit;font:inherit;cursor:pointer}
+.pick button:first-child{border-top:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.g-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:10px 12px;width:100%;background:none;border:0;border-top:1px solid var(--rule);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.g-row:first-child{border-top:0}
+.g-row b{font:700 .95rem var(--f-num)}
+.e-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:2px 14px;padding:9px 12px;align-items:baseline}
+.e-row + .e-row{border-top:1px solid var(--rule)}
+.e-row b{font:600 .92rem var(--f-num);text-align:right}
+.e-row small{grid-column:1 / -1;color:var(--ink-2);font-size:.75rem}
+.e-row.e-h{font-size:.75rem;color:var(--ink-2);font-weight:600}
+.c-row .acts{grid-column:1 / -1;display:flex;gap:6px;flex-wrap:wrap}
+.c-ok{color:var(--ok)!important}
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.seg label{display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--rule);border-radius:999px;cursor:pointer;font-size:.92rem;background:var(--paper)}
+.seg label:has(input:checked){border-color:var(--carbon);font-weight:600}
+#cfPay .chips{margin-top:8px}
 </style>
 
 </head>
@@ -222,6 +269,14 @@ textarea.fallback{width:100%;min-height:120px;font:.75rem var(--f-num);backgroun
     <div class="brand"><h1>NIR rapid</h1><span class="stamp">COD 14-3-1A</span></div>
     <p class="lede">Încarci factura și primești nota de recepție calculată: adaos pe prețul fără TVA, preț de raft rotunjit la 10 bani, TVA neexigibil separat, garanția SGR neatinsă.</p>
   </header>
+
+  <nav class="tabs" role="tablist" aria-label="Secțiuni">
+    <button type="button" role="tab" id="tb-nir" data-tab="nir" aria-selected="true">NIR</button>
+    <button type="button" role="tab" id="tb-casa" data-tab="casa" aria-selected="false">Casă</button>
+    <button type="button" role="tab" id="tb-gest" data-tab="gest" aria-selected="false">Gestiune</button>
+  </nav>
+
+  <div class="tabpane" id="paneNir">
 
   <section class="intake" aria-label="Încarcă factura">
     <label class="drop" id="dropFile" for="fileInv">
@@ -250,6 +305,10 @@ textarea.fallback{width:100%;min-height:120px;font:.75rem var(--f-num);backgroun
       <div class="q-head"><b>Gata de emis</b><span id="qReadySum"></span></div>
       <ol class="ledger" id="qReady"></ol>
       <div class="q-actions"><button class="btn primary" id="btnBatch" type="button">Emite NIR-urile</button></div>
+      <div class="ask" id="batchAsk" hidden>
+        <p id="batchAskText"></p>
+        <div class="q-actions"><button class="btn primary" id="btnBatchGo" type="button">Da, am pus tot. Emite</button><button class="btn" id="btnBatchNo" type="button">Nu, întâi descarc din Oblio</button></div>
+      </div>
       <p class="reg-note" id="qReadyNote"></p>
     </div>
     <div class="q-grp" id="qWaitBox">
@@ -372,6 +431,7 @@ textarea.fallback{width:100%;min-height:120px;font:.75rem var(--f-num);backgroun
     <p>Țigările au preț impus: nu le poți vinde peste prețul de vânzare cu amănuntul declarat de producător. Atinge produsul și scrie „Preț fix”; rămâne ținut minte. La produsele cu gramaj vezi și prețul pe kg sau pe litru, pentru etichetă.</p>
     <p>Când un furnizor îți vinde un produs cu peste 5% mai scump decât la recepția anterioară, produsul e marcat cu roșu „Scumpit”. Pragul îl schimbi la „Date NIR”.</p>
     <p>Coada: fiecare factură încărcată intră în coadă și îi vezi imediat prețurile de raft și valoarea estimată, dar primește număr de NIR abia după ce se închide ziua ei: 5 zile lucrătoare (termenul în care furnizorii trebuie s-o trimită în SPV, fără weekenduri și sărbători legale) plus o zi. „Emite NIR-urile” le emite pe toate cele gata, strict în ordinea datei. Dacă una are ceva de decis (preț de raft schimbat, scumpire, plafonare, avertisment), lotul se oprește la ea și îți spune ce să faci; după ce o rezolvi și apeși „Emite NIR (PDF)”, continuă singur cu următoarele. Așa numerele urmează datele: 12, 13, 14.</p>
+    <p>Niciun NIR nu se emite singur: doar când apeși „Emite NIR-urile” și confirmi că ai pus în coadă toate facturile apărute în Oblio. Dacă descarci facturile o dată pe săptămână, regula e simplă: întâi descarci tot din Oblio, abia apoi emiți.</p>
     <p>Dosarul cu facturi: îl alegi o singură dată (de exemplu Download/Facturi). De fiecare dată când deschizi aplicația sau revii în ea, facturile noi din dosar intră singure în coadă; fiecare fișier e citit o singură dată. Android nu dă acces direct la dosarul Download, de aceea trebuie un subdosar.</p>
     <p>Factura originală: PDF-ul încărcat se pune pe ultimele pagini ale NIR-ului, ca la deschiderea NIR-ului să ai și documentul care a stat la baza lui. Facturile venite doar ca XML nu au PDF de pus.</p>
     <p>Raportul lunar: apare sus după ce luna s-a închis (după ultima zi a lunii mai trec 5 zile lucrătoare plus o zi, iar în coadă nu mai sunt facturi din luna aceea). Butonul deschide emailul cu toate NIR-urile lunii, către adresa pusă la „Registru NIR”.</p>
@@ -379,6 +439,129 @@ textarea.fallback{width:100%;min-height:120px;font:.75rem var(--f-num);backgroun
     <p>Transportul de pe factură intră în costul mărfii, nu la raft. Ambalajele facturate (navete, paleți) se trec separat. Marfa gratuită intră la prețul normal de vânzare.</p>
     <p>NIR-ul se descarcă ca PDF de tipărit, în structura formularului 14-3-1A, sau ca Excel. PDF-ul și XML-ul facturii se citesc doar pe dispozitivul tău. O poză, sau un PDF în alt format decât cel ANAF, se trimite la Claude pentru citire, din contul tău.</p>
   </div>
+
+  </div>
+
+  <section class="tabpane" id="paneCasa" aria-label="Registru de casă" hidden>
+    <div class="card" id="cStartWarn" hidden>
+      <h3>Întâi soldurile de pornire</h3>
+      <p class="reg-note">Registrul de casă pornește de la numerarul din casă la o dată de start. Le pui o singură dată la „Gestiune” → „Solduri de pornire”.</p>
+      <div class="reg-actions"><button class="btn primary" type="button" data-goto="gest">Pune soldurile de pornire</button></div>
+    </div>
+    <div class="day-nav"><button class="btn" id="dPrev" type="button" aria-label="Ziua dinainte">‹</button><input type="date" id="dDate" aria-label="Ziua"><button class="btn" id="dNext" type="button" aria-label="Ziua următoare">›</button><button class="btn" id="dToday" type="button">Azi</button></div>
+    <p class="c-info" id="cHead"></p>
+    <div class="chips" id="cEst" hidden><span class="c-info" id="cEstTxt"></span><button type="button" class="chip" data-goto="gest">Zi de zi</button></div>
+    <div class="chips" id="cLater" hidden><span class="c-info" id="cLaterTxt"></span><button type="button" class="chip" id="cLaterBtn">Le-am plătit? Alege</button></div>
+    <div class="chips" id="cMissing"></div>
+    <div class="card" id="cOpenBox" hidden>
+      <h3 id="cOpenTitle">Facturi noi: cum le-ai plătit?</h3>
+      <p class="reg-note">„La livrare” trece plata în ziua de pe factură, oricând ar fi apărut factura în SPV. „Altă zi”: ai plătit-o deja, dar în altă zi decât cea de pe factură; alegi tu cash sau card și ziua. „La termen”: n-ai plătit-o încă.</p>
+      <ol class="c-list" id="openInvList"></ol>
+    </div>
+    <div class="card">
+      <h3>Vânzările zilei, din raportul Z</h3>
+      <div class="grid3">
+        <label class="f">Nr. raport Z<input type="text" id="zNo" inputmode="numeric" autocomplete="off"></label>
+        <label class="f">Numerar (cash)<input type="text" id="zCash" inputmode="decimal" autocomplete="off" placeholder="ex. 1.250,50"></label>
+        <label class="f">Card<input type="text" id="zCard" inputmode="decimal" autocomplete="off" placeholder="ex. 830,00"></label>
+        <label class="f">Garanții SGR (lei)<input type="text" id="zSgr" inputmode="decimal" autocomplete="off" placeholder="ex. 57,00"></label>
+      </div>
+      <label class="tog"><input type="checkbox" id="zClosed"><span>Magazin închis în ziua asta (fără vânzări)</span></label>
+      <p class="reg-note" id="zNote"></p>
+    </div>
+    <div class="card">
+      <h3 id="cDayInvTitle">Facturile din ziua asta</h3>
+      <p class="reg-note">La fiecare factură cu data asta alegi: <b>la livrare: cash</b> (intră în registrul de casă în ziua facturii), <b>la livrare: card</b> (nu intră în casă) sau <b>la termen</b>. La cele la termen scrii tu, când le plătești, cum ai plătit și în ce zi. Până nu alegi la toate, ziua rămâne provizorie.</p>
+      <ol class="c-list" id="dayInvList"></ol>
+    </div>
+    <div class="card">
+      <h3>Plățile din ziua asta</h3>
+      <ol class="c-list" id="outList"></ol>
+      <div class="reg-actions"><button class="btn" id="btnPayInv" type="button">Plătesc o factură</button><button class="btn" id="btnPayBank" type="button">Depunere la bancă</button><button class="btn" id="btnPayOther" type="button">Altă plată cash</button></div>
+      <div id="cInvBox" hidden>
+        <label class="f">Caută furnizorul, numărul sau data facturii<input type="text" id="cInvQ" autocomplete="off"></label>
+        <label class="tog"><input type="checkbox" id="cInvOld"><span>Arată și facturile dinainte de data de start</span></label>
+        <p class="c-info" id="cInvHead"></p>
+        <div class="c-list pick" id="cInvList"></div>
+      </div>
+    </div>
+    <div class="card" id="cForm" hidden>
+      <h3 id="cfTitle"></h3>
+      <div id="cfPay" hidden>
+        <div class="seg" role="radiogroup" aria-label="Cum ai plătit"><label><input type="radio" name="cfMethod" value="cash">Cash (numerar)</label><label><input type="radio" name="cfMethod" value="card">Card sau transfer</label></div>
+        <label class="f">Data plății<input type="date" id="cfDate"></label>
+        <div class="chips" id="cfDateChips"></div>
+        <p class="reg-note" id="cfNote"></p>
+      </div>
+      <label class="f">Explicații<input type="text" id="cfLabel" autocomplete="off"></label>
+      <div class="grid3">
+        <label class="f">Nr. document (opțional)<input type="text" id="cfDoc" autocomplete="off"></label>
+        <label class="f">Suma (lei)<input type="text" id="cfAmt" inputmode="decimal" autocomplete="off"></label>
+      </div>
+      <div class="reg-actions"><button class="btn primary" id="cfSave" type="button">Adaugă</button><button class="btn" id="cfCancel" type="button">Renunță</button></div>
+    </div>
+    <div class="card">
+      <h3>Alte încasări în numerar</h3>
+      <ol class="c-list" id="innList"></ol>
+      <div class="reg-actions"><button class="btn" id="btnInBank" type="button">Ridicare numerar din bancă</button><button class="btn" id="btnInOther" type="button">Altă încasare</button></div>
+    </div>
+    <div class="card">
+      <h3>Casa în ziua asta</h3>
+      <div class="c-sum" id="cSum"></div>
+      <p class="c-info" id="cDayState"></p>
+      <label class="f">Numerar numărat în sertar (opțional)<input type="text" id="cCounted" inputmode="decimal" autocomplete="off"></label>
+      <div id="cWarn"></div>
+      <div class="reg-actions"><button class="btn primary" id="btnCasaPdf" type="button">Registru de casă (PDF)</button></div>
+      <p class="c-info" data-dirnote></p><div class="reg-actions"><button class="btn" type="button" data-dirpick>Alege dosarul</button></div>
+    </div>
+  </section>
+
+  <section class="tabpane" id="paneGest" aria-label="Gestiune" hidden>
+    <div class="card" id="eBox">
+      <h3>Zi de zi: casa și marfa (informativ)</h3>
+      <p class="reg-note">Cifre de lucru, nu documente: casa din vânzările și plățile introduse, marfa la preț de vânzare din NIR-urile făcute plus facturile din coadă, cu valoarea estimată a NIR-ului lor, ca și cum n-ar mai veni alte facturi. Registrul de casă și raportul de gestiune se fac tot doar după ce ziua se închide.</p>
+      <p class="c-info" id="eHead"></p>
+      <div class="c-list" id="eList"></div>
+      <div class="reg-actions"><button class="btn" id="eMore" type="button" hidden>Arată toate zilele</button></div>
+    </div>
+    <details class="card" id="gStart">
+      <summary><b>Solduri de pornire</b> <span id="gStartSum"></span></summary>
+      <div class="grid3">
+        <label class="f">Data de start<input type="date" id="stDate"></label>
+        <label class="f">Marfă la preț de vânzare cu TVA, la începutul zilei<input type="text" id="stStock" inputmode="decimal" autocomplete="off"></label>
+        <label class="f">Numerar în casă, la începutul zilei<input type="text" id="stCash" inputmode="decimal" autocomplete="off"></label>
+      </div>
+      <p class="reg-note">Le iei de la contabilă: soldul mărfii la preț de vânzare (contul 371) și al casei (contul 5311) la sfârșitul zilei dinaintea datei de start. Le poți schimba oricând; tot ce urmează se recalculează.</p>
+    </details>
+    <details class="card" id="gPv">
+      <summary><b>Modificări de preț la marfa din raft</b> <span class="c-info">(opțional, cu proces-verbal)</span></summary>
+      <p class="reg-note">Doar când schimbi prețul de vânzare al unei mărfi care era deja în magazin. Scrii diferența totală: (preț nou − preț vechi) × bucățile rămase. Plus la scumpire, minus la ieftinire. Fără ea, gestiunea scriptică nu se mai potrivește cu inventarul.</p>
+      <div class="grid3">
+        <label class="f">Data<input type="date" id="pvDate"></label>
+        <label class="f">Nr. proces-verbal<input type="text" id="pvDoc" autocomplete="off"></label>
+        <label class="f">Diferența (lei, cu minus la ieftinire)<input type="text" id="pvAmt" inputmode="decimal" autocomplete="off" placeholder="ex. -35,20"></label>
+      </div>
+      <label class="f">Explicații<input type="text" id="pvExp" autocomplete="off" placeholder="ex. reducere preț iaurt 140 g"></label>
+      <div class="reg-actions"><button class="btn" id="pvAdd" type="button">Adaugă modificarea de preț</button></div>
+      <ol class="c-list" id="pvList"></ol>
+    </details>
+    <div class="card">
+      <h3>Gestiunea pe zile</h3>
+      <p class="c-info" id="gHead"></p>
+      <div class="c-list" id="gList"></div>
+      <div class="reg-actions"><button class="btn" id="gMore" type="button" hidden>Arată toate zilele</button></div>
+    </div>
+    <div class="card">
+      <h3>Rapoarte pentru contabilă</h3>
+      <div class="grid3">
+        <label class="f">De la<input type="date" id="rFrom"></label>
+        <label class="f">Până la<input type="date" id="rTo"></label>
+      </div>
+      <div class="reg-actions"><button class="btn primary" id="btnGestPdf" type="button">Raport de gestiune (PDF)</button><button class="btn" id="btnCasaRange" type="button">Registru de casă pe perioadă (PDF)</button></div>
+      <p class="reg-note" id="rNote">Raportul lunar trimis contabilei include și registrul de casă și raportul de gestiune ale lunii.</p>
+      <p class="c-info" data-dirnote></p><div class="reg-actions"><button class="btn" type="button" data-dirpick>Alege dosarul</button></div>
+    </div>
+  </section>
 
   <div class="bar">
     <div class="bar-row">
@@ -456,7 +639,7 @@ const S = {
   pct: typeof saved.pct === 'number' ? saved.pct : 20,
   step: STEPS.includes(saved.step) ? saved.step : 0.1,
   risePct: typeof saved.risePct === 'number' ? saved.risePct : 5,
-  dateRule: saved.dateRule === 'emit' ? 'emit' : 'inv', batch: false, qKey: null, attach: saved.attach !== false, srcFrom: isoOk(saved.srcFrom) ? saved.srcFrom : '', srcLast: saved.srcLast || '',
+  dateRule: saved.dateRule === 'emit' ? 'emit' : 'inv', batch: false, qKey: null, attach: saved.attach !== false, srcFrom: isoOk(saved.srcFrom) ? saved.srcFrom : '', srcLast: saved.srcLast || '', lastImport: saved.lastImport || '', start: saved.start && isoOk(saved.start.date) ? saved.start : null, later: saved.later && typeof saved.later === 'object' ? saved.later : {},
   overrides: saved.overrides && typeof saved.overrides === 'object' ? saved.overrides : {},
   nextNir: Number.isInteger(saved.nextNir) && saved.nextNir > 0 ? saved.nextNir : 1,
   serie: saved.serie || '', unitName: saved.unitName || '', unitCui: saved.unitCui || '', unitReg: saved.unitReg || '', gest: saved.gest || '',
@@ -475,7 +658,7 @@ function saveStore(){
   try { localStorage.setItem(STORE, JSON.stringify(settingsBlob())); } catch (e) {}
 }
 function settingsBlob(){
-  return {pct:S.pct, step:S.step, risePct:S.risePct, dateRule:S.dateRule, attach:S.attach, srcFrom:S.srcFrom, srcLast:S.srcLast, overrides:S.overrides, nextNir:S.startNr, serie:S.serie, company:S.company, gest:S.gest, com:S.com, gestionar:S.gestionar, repEmail:S.repEmail, lastReport:S.lastReport, repBackup:S.repBackup, maxNr:S.maxNr, sent:S.sent};
+  return {pct:S.pct, step:S.step, risePct:S.risePct, dateRule:S.dateRule, attach:S.attach, srcFrom:S.srcFrom, srcLast:S.srcLast, lastImport:S.lastImport, start:S.start, later:S.later, overrides:S.overrides, nextNir:S.startNr, serie:S.serie, company:S.company, gest:S.gest, com:S.com, gestionar:S.gestionar, repEmail:S.repEmail, lastReport:S.lastReport, repBackup:S.repBackup, maxNr:S.maxNr, sent:S.sent};
 }
 
 /* ---------------- ZIP read (SPV archive) ---------------- */
@@ -546,7 +729,7 @@ function parseUBL(xml){
   const tt = kids(root, 'TaxTotal').find(t => kid(t, 'TaxSubtotal')) || kid(root, 'TaxTotal');
   const n = (el, p) => { const v = num(el, p); return v == null ? null : v * sign; };
   return {
-    source: 'xml', docType: type, number: txt(root, 'ID'), date: txt(root, 'IssueDate'), currency: txt(root, 'DocumentCurrencyCode') || 'RON',
+    source: 'xml', docType: type, number: txt(root, 'ID'), date: txt(root, 'IssueDate'), due: txt(root, 'DueDate') || txt(root, 'PaymentMeans/PaymentDueDate') || '', currency: txt(root, 'DocumentCurrencyCode') || 'RON',
     supplier: xmlParty(at(root, 'AccountingSupplierParty/Party')), buyer: xmlParty(at(root, 'AccountingCustomerParty/Party')),
     lines, allowances,
     totals: {lineNet: n(lmt, 'LineExtensionAmount'), net: n(lmt, 'TaxExclusiveAmount'), gross: n(lmt, 'TaxInclusiveAmount'), payable: n(lmt, 'PayableAmount'), vat: n(tt, 'TaxAmount')}
@@ -662,6 +845,7 @@ function parseAnafPdf(pages){
   const number = p0.filter(i => i !== title && near(i, title) && i.x > title.x).map(i => i.s).join(' ').trim();
   const all0 = p0.map(i => i.s).join('\n');
   const dm = /Data emiterii:?\s*(\d{2})[.\/-](\d{2})[.\/-](\d{4})/i.exec(all0);
+  const dd = /Termen(?:ul)?\s+(?:de\s+)?plat[aă]:?\s*(\d{2})[.\/-](\d{2})[.\/-](\d{4})/i.exec(all0);
   const cota = p0.find(i => /cota tva/i.test(i.s));
   const rates = cota ? [...cota.s.matchAll(/(\d+(?:[.,]\d+)?)\s*%/g)].map(m => parseFloat(m[1].replace(',', '.'))) : [];
   const supL = p0.find(i => /^furnizor:?$/i.test(i.s)), cliL = p0.find(i => /^(client|cumparator|cumpărător|beneficiar):?$/i.test(i.s));
@@ -767,7 +951,7 @@ function parseAnafPdf(pages){
   const allTxt = pages.map(pg => pg.map(i => i.s).join('\n')).join('\n');
   const mi = /Index\s+inc[aă]rcare:?\s*(\d{5,})/i.exec(allTxt), ms = /Data\s+transmitere\s+[iî]n\s+SPV:?\s*(\d{2})[.\/-](\d{2})[.\/-](\d{4})/i.exec(allTxt);
   const inv = {
-    source: 'pdf', docType: 'Invoice', number, date: dm ? dm[3] + '-' + dm[2] + '-' + dm[1] : '', currency, supplier, buyer, lines, allowances,
+    source: 'pdf', docType: 'Invoice', number, date: dm ? dm[3] + '-' + dm[2] + '-' + dm[1] : '', due: dd ? dd[3] + '-' + dd[2] + '-' + dd[1] : '', currency, supplier, buyer, lines, allowances,
     spvIndex: mi ? mi[1] : '', spvDate: ms ? ms[3] + '-' + ms[2] + '-' + ms[1] : '',
     totals: {lineNet: subs.length ? round2(subVal) : null,
       net: totalRow && totalRow.val != null ? totalRow.val : (subs.length ? round2(subVal + extraNet) : null),
@@ -1658,7 +1842,7 @@ async function enqueue(items){
     const key = invKey(inv), rec = REG.find(r => sameInv(r, inv) && r.status === 'emis' && !r.stornoOf);
     if (rec) { out.done.push({inv, rec}); continue; }
     const i = QUEUE.findIndex(q => q.key === key), item = {key, inv, added: i >= 0 ? QUEUE[i].added : new Date().toISOString()};
-    if (i >= 0) { QUEUE[i] = item; out.again.push(inv); } else { QUEUE.push(item); out.added.push(inv); }
+    if (i >= 0) { QUEUE[i] = item; out.again.push(inv); } else { QUEUE.push(item); out.added.push(inv); S.lastImport = new Date().toISOString(); saveStore(); }
     EST.delete(key);
     try { await QDB.put(item); if (pdf) await QDB.filePut(key, pdf); } catch (e) {}
   }
@@ -1796,7 +1980,16 @@ async function runBatch(prevNr){
   }
   toast(msg.trim() || 'Nu e nicio factură gata de emis.', stopped || failed ? 'bad' : 'ok');
 }
-$('#btnBatch').addEventListener('click', () => { if (DIR.set) DIR.grant(); runBatch(); });
+$('#btnBatch').addEventListener('click', () => {
+  if (DIR.set) DIR.grant();
+  const g = qGroups(), last = g.ready.length ? g.ready[g.ready.length - 1].q.inv.date : '';
+  $('#batchAskText').innerHTML = 'Înainte să emit: ai pus în coadă <b>toate</b> facturile apărute în Oblio până azi? Emit ' + g.ready.length + (g.ready.length === 1 ? ' factură' : ' facturi') + ' cu date până la ' + roDate(last) +
+    '. O factură mai veche din aceste zile, pusă în coadă după aceea, nu mai poate primi număr în ordine.' +
+    (S.lastImport ? ' Ultima factură nouă a intrat în coadă pe ' + hhmm(S.lastImport) + '.' : '') + (FOLDER.set && S.srcLast ? ' Dosarul cu facturi a fost verificat ultima dată pe ' + hhmm(S.srcLast) + '.' : '');
+  $('#batchAsk').hidden = false; $('#batchAsk').scrollIntoView({block: 'center', behavior: 'smooth'});
+});
+$('#btnBatchGo').addEventListener('click', () => { $('#batchAsk').hidden = true; runBatch(); });
+$('#btnBatchNo').addEventListener('click', () => { $('#batchAsk').hidden = true; toast('Bine. Descarcă facturile din Oblio (în dosarul cu facturi sau cu „Încarcă facturile PDF”), apoi apasă din nou „Emite NIR-urile”.', 'ok'); });
 const dz = $('#dropFile');
 ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('drag'); }));
 ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('drag'); }));
@@ -2420,7 +2613,7 @@ const DIR = (() => {
   const MON = ['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie', 'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'];
   // "POPESCU COM S.R.L." -> "NIR-uri Popescu"
   const mainName = () => { const w = norm((S.company && S.company.name) || '').replace(/[^a-z0-9 ]+/g, ' ').trim().split(' ')[0] || ''; return safe('NIR-uri' + (w ? ' ' + cap1(w) : '')); };
-  const monthDir = ym => { const m = /^(\d{4})-(\d{2})/.exec(ym || ''); return m && +m[2] >= 1 && +m[2] <= 12 ? 'NIR-uri ' + MON[+m[2] - 1] + ' ' + m[1] : ''; };
+  const monthDir = (ym, pre) => { const m = /^(\d{4})-(\d{2})/.exec(ym || ''); return m && +m[2] >= 1 && +m[2] <= 12 ? (pre || 'NIR-uri') + ' ' + MON[+m[2] - 1] + ' ' + m[1] : ''; };
   // a folder the user already named "NIR..." is the main folder itself; any other folder (e.g. Documente) gets the main folder made inside it
   const isMain = () => /^nir/.test(norm(handle.name));
   const mainLabel = () => isMain() ? handle.name : handle.name + ' / ' + mainName();
@@ -2437,9 +2630,9 @@ const DIR = (() => {
     // asked right at the tap, while it still counts as the user's own gesture (Android may ask again after the app restarts)
     async grant(){ if (!handle) return false; try { if (!handle.queryPermission || (await handle.queryPermission(RW)) === 'granted') return true; return (await handle.requestPermission(RW)) === 'granted'; } catch (e) { return false; } },
     // returns where the file went, e.g. "NIR-uri Popescu / NIR-uri Octombrie 2026"
-    async write(filename, blob, ym){
+    async write(filename, blob, ym, pre){
       const main = isMain() ? handle : await handle.getDirectoryHandle(mainName(), {create: true});
-      const mdir = monthDir(ym), dir = mdir ? await main.getDirectoryHandle(mdir, {create: true}) : main;
+      const mdir = monthDir(ym, pre), dir = mdir ? await main.getDirectoryHandle(mdir, {create: true}) : main;
       const fh = await dir.getFileHandle(filename, {create: true}); const w = await fh.createWritable(); try { await w.write(blob); await w.close(); } catch (e) { try { await w.abort(); } catch (x) {} throw e; }
       return (isMain() ? handle.name : mainName()) + (mdir ? ' / ' + mdir : '');
     }
@@ -2454,7 +2647,7 @@ function renderDir(){
 }
 function slug(s){ return norm(s).replace(/\b(s\.?r\.?l\.?|s\.?a\.?)(?=\s|$)/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'furnizor'; }
 function modelFileName(M, ext){ return 'NIR-' + ((M.serie ? M.serie + '-' : '') + (M.nr || 'fara-nr')).replace(/[^\w-]+/g, '') + (M.storno ? '-storno' : '') + '_' + slug(M.sup.name) + '_fact-' + (M.inv.number || '').replace(/[^\w-]+/g, '').slice(0, 20) + '.' + ext; }
-async function saveBlob(filename, blob, ym){
+async function saveBlob(filename, blob, ym, pre){
   if (window.claude && typeof window.claude.use === 'function') {
     const dl = downloads || await window.claude.use('downloads');
     if (!dl) throw {code: 'unavailable'};
@@ -2464,7 +2657,7 @@ async function saveBlob(filename, blob, ym){
   // a folder chosen by the user; if it cannot be written, the file still goes to Downloads
   if (DIR.set) {
     if (await DIR.grant()) {
-      try { const where = await DIR.write(filename, blob, ym); SAVE_NOTE = 'Salvat în „' + where + '”.'; return true; } catch (e) {}
+      try { const where = await DIR.write(filename, blob, ym, pre); SAVE_NOTE = 'Salvat în „' + where + '”.'; return true; } catch (e) {}
     }
     SAVE_NOTE = 'Nu am putut scrie în dosarul „' + DIR.name + '”; fișierul e în Descărcări.';
   }
@@ -2527,7 +2720,7 @@ async function issueCore(kind){
     if (S.example) { await downloadModel(M, kind); toast('Exemplul a fost descărcat. Încarcă factura ta pentru un NIR real.', 'ok'); return false; }
     const nr = +S.nirNo, inv = S.inv;
     const rec = {nr, serie: S.serie, date: S.nirDate, issuedAt: new Date().toISOString(), status: 'emis', stornoOf: null, stornoBy: null,
-      invKey: invKey(inv), supName: (inv.supplier && inv.supplier.name) || '', supCui: (inv.supplier && inv.supplier.cui) || '', invNo: inv.number || '', invDate: inv.date || '',
+      invKey: invKey(inv), supName: (inv.supplier && inv.supplier.name) || '', supCui: (inv.supplier && inv.supplier.cui) || '', invNo: inv.number || '', invDate: inv.date || '', invDue: inv.due || '',
       spvIndex: M.inv.spvIndex || '', model: M};
     if (STORE_OK) {
       try { await IDB.add('nir', rec); if (nr > (S.maxNr || 0)) { S.maxNr = nr; saveStore(); } }
@@ -2656,6 +2849,14 @@ $('#fileRestore').addEventListener('change', async e => {
     const st = data.settings || {};
     if (!S.company && st.company && st.company.cui) S.company = st.company;
     if (!S.repEmail && st.repEmail) S.repEmail = st.repEmail;
+    if (!S.start && st.start && isoOk(st.start.date)) S.start = st.start;
+    if (st.later && typeof st.later === 'object') S.later = Object.assign({}, st.later, S.later);
+    let daysIn = 0;
+    for (const d of Array.isArray(data.days) ? data.days : []) {
+      if (!d || !isoOk(d.date)) continue;
+      const have = DAYS.get(d.date);
+      if (!have || (have.updatedAt || '') < (d.updatedAt || '')) { DAYS.set(d.date, d); try { await DDB.put(d); } catch (x) {} daysIn++; }
+    }
     if ((st.lastReport || '') > (S.lastReport || '')) S.lastReport = st.lastReport;
     if (st.sent && typeof st.sent === 'object') for (const k in st.sent) if (!S.sent[k]) S.sent[k] = st.sent[k];
     const top = REG.length ? REG[REG.length - 1].nr : 0;
@@ -2663,7 +2864,7 @@ $('#fileRestore').addEventListener('change', async e => {
     saveStore();
     render();
     const lr = lastReg();
-    toast('Copie restaurată: ' + added + ' NIR-uri adăugate, ' + same + ' existau deja.' +
+    toast('Copie restaurată: ' + added + ' NIR-uri adăugate, ' + same + ' existau deja' + (daysIn ? ', ' + daysIn + ' zile de casă și gestiune' : '') + '.' +
       (lr ? ' Ultimul NIR din registru: nr. ' + lr.nr + ' din ' + roDate(lr.date) + '. Dacă ai emis NIR-uri după data copiei, scrie la „Nr. NIR” numărul următor ultimului NIR trimis contabilei, ca să nu se repete numere.' : ''), added ? 'bad' : 'ok');
   } catch (err) { toast(err && err.message ? err.message : 'Copia nu a putut fi citită.', 'bad'); }
 });
@@ -2673,7 +2874,7 @@ $('#fileRestore').addEventListener('change', async e => {
 // phone's email app through the share sheet (or downloaded + mailto when sharing files is not supported).
 let repCache = null, repSel = '';
 function isEmail(v){ return /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]{2,}$/.test(String(v || '').trim()); }
-function backupData(){ return {app: 'nir-rapid', v: 2, exportedAt: new Date().toISOString(), settings: settingsBlob(), nir: REG, prices: [...PRICES.values()]}; }
+function backupData(){ return {app: 'nir-rapid', v: 2, exportedAt: new Date().toISOString(), settings: settingsBlob(), nir: REG, prices: [...PRICES.values()], days: [...DAYS.values()]}; }
 function reportMonths(){ return [...new Set(REG.map(r => monthOf(r.date)).filter(Boolean))].sort().reverse(); }
 function monthSig(ym){ return monthRecs(ym).map(r => r.nr).join(','); }
 // a month is complete once its last day has closed in SPV and no invoice of that month is still waiting in the queue
@@ -2697,7 +2898,7 @@ function buildMonthCsv(ym){
 }
 async function prepareReport(ym){
   const recs = monthRecs(ym), co = S.company || {}, email = S.repEmail.trim();
-  const key = [ym, email, S.repBackup, REG.length, REG.map(r => r.nr + r.status).join(',')].join('|');
+  const key = [ym, email, S.repBackup, REG.length, REG.map(r => r.nr + r.status).join(','), JSON.stringify(S.start), [...DAYS.values()].map(d => d.updatedAt || '').join(','), QUEUE.length].join('|');
   if (repCache && repCache.key === key) return repCache;
   const T = monthTotals(recs), nrs = recs.map(r => r.nr);
   const files = [
@@ -2711,10 +2912,21 @@ async function prepareReport(ym){
     'PDF-ul conține registrul lunii și fiecare NIR. Fișierul CSV se deschide în Excel.' +
     (S.repBackup ? '\nFișierul .txt este copia de siguranță a programului de NIR-uri; nu trebuie deschis, doar păstrat.' : '') +
     '\n\nCu stimă,\n' + (S.gestionar || co.name || '');
-  repCache = {key, ym, email, files, title, text};
+  let extra = '';
+  if (startSet()) {
+    const a = ym + '-01' < S.start.date ? S.start.date : ym + '-01', z = lastDayOf(ym);
+    if (a <= z) {
+      files.splice(2, 0, new File([await buildCashPdf(a, z, false)], 'Registru-de-casa_' + ym + '.pdf', {type: 'application/pdf'}), new File([await buildGestPdf(a, z, false)], 'Raport-de-gestiune_' + ym + '.pdf', {type: 'application/pdf'}));
+      const g = stockBook(z).get(z);
+      const c = cashBook(z).get(z);
+      extra = '\n\nAtașez și registrul de casă și raportul de gestiune pe ' + monthName(ym) + '.' + (c && !c.final ? ' Registrul de casă e provizoriu: ' + waitText(c, z) + '.' : '') + (g && !g.final ? ' Raportul de gestiune e provizoriu: ' + waitText(g, z) + '.' : '');
+    }
+  }
+  repCache = {key, ym, email, files, title, text: extra ? text.replace(/\n\nCu stimă,/, extra + '\n\nCu stimă,') : text};
   return repCache;
 }
-function markSent(ym){ S.sent[ym] = monthSig(ym); if (ym > (S.lastReport || '')) S.lastReport = ym; saveStore(); renderReport(); }
+async function markMonth(ym){ if (!startSet()) return; const a = ym + '-01' < S.start.date ? S.start.date : ym + '-01', z = lastDayOf(ym); if (a <= z) { await markPrinted(a, z, 'cash'); await markPrinted(a, z, 'gest'); } }
+function markSent(ym){ markMonth(ym); S.sent[ym] = monthSig(ym); if (ym > (S.lastReport || '')) S.lastReport = ym; saveStore(); renderReport(); }
 function openMail(email, subject, body){
   const a = document.createElement('a');
   a.href = 'mailto:' + encodeURIComponent(email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
@@ -2746,7 +2958,8 @@ async function sendReport(ym){
         // any other failure: fall through to download + mailto
       }
     }
-    for (const f of R.files) { try { await saveBlob(f.name, f, R.ym); } catch (e) { saveErr(e, f.name.split('.').pop().toUpperCase()); return; } }
+    for (const f of R.files) { try { await saveBlob(f.name, f, R.ym, /^(Registru-de-casa|Raport-de-gestiune)/.test(f.name) ? CG_DIR : undefined); } catch (e) { saveErr(e, f.name.split('.').pop().toUpperCase()); return; } }
+    await markMonth(R.ym);
     openMail(R.email, R.title, R.text.replace('Atașez', 'Vă trimit atașat'));
     toast('Fișierele raportului s-au salvat' + (DIR.set ? '' : ' în Descărcări') + '. Se deschide un email către ' + R.email + ': atașează cele ' + R.files.length + ' fișiere și trimite. După ce l-ai trimis, apasă sus „Le-am trimis deja”.', 'ok');
   } finally { repBusy = false; btn.disabled = false; }
@@ -2906,6 +3119,591 @@ if (!window.claude) {
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 }
 
+/* ================= Casă și Gestiune ================= */
+// one record per calendar day: what the Z report said and the cash that moved; the NIRs come from the register
+const DDB = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    let r; try { r = indexedDB.open('nir-rapid-zile', 1); } catch (e) { rej(e); return; }
+    r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('d')) r.result.createObjectStore('d', {keyPath: 'date'}); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); r.onblocked = () => rej(new Error('blocked'));
+  }));
+  const run = (mode, fn) => open().then(d => new Promise((res, rej) => {
+    const t = d.transaction('d', mode), q = fn(t.objectStore('d')); let out;
+    if (q) q.onsuccess = () => { out = q.result; };
+    t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+  }));
+  return {all: () => run('readonly', s => s.getAll()), put: v => run('readwrite', s => s.put(v))};
+})();
+const CG_DIR = 'Casă și gestiune';
+let DAYS = new Map(), DAY_OK = true, CDAY = today(), CF = null, cArm = null, gAll = false;
+async function loadDays(){ try { (await DDB.all() || []).forEach(d => { if (d && isoOk(d.date)) DAYS.set(d.date, d); }); } catch (e) { DAY_OK = false; } }
+const blankDay = date => ({date, cash: null, card: null, sgr: null, closed: false, inn: [], out: [], pv: [], counted: null});
+function getDay(date){ return Object.assign(blankDay(date), DAYS.get(date) || {}); }
+async function putDay(d){ d.updatedAt = new Date().toISOString(); DAYS.set(d.date, d); try { await DDB.put(d); } catch (e) { DAY_OK = false; toast('Ziua nu a putut fi salvată în telefon. Verifică spațiul liber.', 'bad'); } }
+const sumAmt = list => round2((list || []).reduce((s, x) => s + (x.amount || 0), 0));
+const startSet = () => !!(S.start && isoOk(S.start.date));
+function eachDate(from, to, fn){ for (let d = from; d <= to; d = addDays(d, 1)) fn(d); }
+function salesIn(d){ return !!d.closed || (d.cash != null && d.card != null && d.sgr != null); }
+function salesOut(d){ return d.closed ? 0 : round2((d.cash || 0) + (d.card || 0) - (d.sgr || 0)); }
+const WD = ['du', 'lu', 'ma', 'mi', 'jo', 'vi', 'sâ'];
+const wday = iso => WD[new Date(iso + 'T00:00:00Z').getUTCDay()];
+// cash book: every day starts from the previous day's final balance; card or bank-transfer payments never touch it
+const isCash = o => o.method !== 'card';
+function cashBook(to){
+  const m = new Map(); if (!startSet()) return m;
+  const qDates = new Map(); QUEUE.forEach(q => qDates.set(q.inv.date, (qDates.get(q.inv.date) || 0) + 1));
+  const open = new Map(); invStatus().forEach(x => { if (x.open && x.date >= S.start.date) open.set(x.date, (open.get(x.date) || 0) + 1); });
+  let prev = round2(S.start.cash || 0), final = true, firstGap = null;
+  eachDate(S.start.date, to, date => {
+    const d = getDay(date), inn = round2((d.closed ? 0 : d.cash || 0) + sumAmt(d.inn)), out = sumAmt(d.out.filter(isCash)), fin = round2(prev + inn - out);
+    const gap = cashGap(date, d, qDates, open);
+    if (gap && !firstGap) firstGap = {date, gap};
+    final = final && !gap;
+    m.set(date, {prev, inn, out, fin, gap, final, wait: final ? null : firstGap}); prev = fin;
+  });
+  m.open = open;
+  return m;
+}
+// a cash day is final once every invoice of that day is in the app and has its payment chosen: a cash payment at delivery may still be missing until then
+function cashGap(date, d, qDates, open){
+  if (!salesIn(d)) return date > today() ? 'ziua nu a trecut' : 'lipsesc vânzările din raportul Z';
+  if (!dayClosed(date)) return 'facturile acestei zile pot apărea în SPV până pe ' + roDate(spvDeadline(date)) + ' și poate lipsi încă o plată la livrare; ziua se închide pe ' + roDate(readyDate(date));
+  const q = qDates.get(date) || 0;
+  if (q) return (q > 1 ? q + ' facturi din ziua asta sunt' : 'o factură din ziua asta e') + ' încă în coadă, fără NIR';
+  const o = open.get(date) || 0;
+  if (o) return (o > 1 ? o + ' facturi din ziua asta nu au' : 'o factură din ziua asta nu are') + ' plata aleasă (cash, card sau la termen)';
+  return '';
+}
+function waitText(b, date){ const w = b.wait; return !w ? b.gap : w.date === date ? w.gap : 'ziua de ' + roDate(w.date) + ' nu e definitivă (' + w.gap + ')'; }
+// NIRs of a day at sale price with VAT; a storno carries minus
+function nirDay(date){ return REG.filter(r => r.date === date).sort((a, b) => a.nr - b.nr); }
+// why a day is not final yet ('' = final for that day alone)
+function dayGap(date, qDates){
+  const d = getDay(date);
+  if (!salesIn(d)) return date > today() ? 'ziua nu a trecut' : 'lipsesc vânzările din raportul Z';
+  if (S.dateRule !== 'emit') {
+    if (!dayClosed(date)) return 'facturile acestei zile pot apărea în SPV până pe ' + roDate(spvDeadline(date)) + '; ziua se închide pe ' + roDate(readyDate(date));
+    const q = qDates ? qDates.get(date) || 0 : QUEUE.filter(x => x.inv.date === date).length;
+    if (q) return (q > 1 ? q + ' facturi din ziua asta sunt' : 'o factură din ziua asta e') + ' încă în coadă, fără NIR';
+  }
+  return '';
+}
+// stock at sale price: previous final + NIRs of the day ± price changes − sales without SGR; final only if every day up to it is
+function stockBook(to){
+  const m = new Map(); if (!startSet()) return m;
+  let prev = round2(S.start.stock || 0), final = true, firstGap = null;
+  const byDate = new Map(); REG.forEach(r => { if (r.date >= S.start.date && r.date <= to) byDate.set(r.date, (byDate.get(r.date) || 0) + (r.model.totals.val || 0)); });
+  const qDates = new Map(); QUEUE.forEach(q => qDates.set(q.inv.date, (qDates.get(q.inv.date) || 0) + 1));
+  eachDate(S.start.date, to, date => {
+    const d = getDay(date), nir = round2(byDate.get(date) || 0), pv = sumAmt(d.pv), out = salesIn(d) ? salesOut(d) : 0, gap = dayGap(date, qDates);
+    if (gap && !firstGap) firstGap = {date, gap};
+    final = final && !gap;
+    const fin = round2(prev + nir + pv - out);
+    m.set(date, {prev, nir, pv, out, fin, gap, final, wait: final ? null : firstGap}); prev = fin;
+  });
+  return m;
+}
+// informative stock: the real stock book plus the queue invoices at the NIR value they would get now (dated as their NIR would be)
+function estBook(to){
+  const g = stockBook(to), m = new Map(); if (!g.size) return m;
+  const add = new Map(), cnt = new Map(), bad = new Map();
+  QUEUE.forEach(q => {
+    const dt = nirDateFor(q.inv); if (!isoOk(dt) || dt < S.start.date || dt > to) return;
+    const e = estimate(q);
+    if (e && isFinite(e.val)) { add.set(dt, (add.get(dt) || 0) + e.val); cnt.set(dt, (cnt.get(dt) || 0) + 1); } else bad.set(dt, (bad.get(dt) || 0) + 1);
+  });
+  let carry = 0, carryN = 0, carryBad = 0;
+  for (const [dt, x] of g) {
+    carry = round2(carry + (add.get(dt) || 0)); carryN += cnt.get(dt) || 0; carryBad += bad.get(dt) || 0;
+    m.set(dt, Object.assign({}, x, {estFin: round2(x.fin + carry), qVal: round2(add.get(dt) || 0), qN: cnt.get(dt) || 0, qBad: bad.get(dt) || 0, carry, carryN, carryBad}));
+  }
+  return m;
+}
+// every invoice the app knows (NIR register first, then the queue), with what was paid on it, in cash or by card
+const payKey = (k, date) => k + '|' + String(date || '').slice(0, 4);
+function invList(){
+  const list = [], seen = new Set();
+  REG.filter(r => !r.stornoOf && r.status === 'emis').forEach(r => { const k = payKey(r.invKey, r.invDate); if (seen.has(k)) return; seen.add(k); list.push({key: k, sup: r.supName || '', no: r.invNo || '', date: r.invDate || '', due: r.invDue || '', total: round2(r.model.refPay != null ? r.model.refPay : r.model.calcPay || 0), src: 'NIR ' + r.nr}); });
+  QUEUE.forEach(q => { const k = payKey(q.key, q.inv.date); if (seen.has(k)) return; seen.add(k); const t = q.inv.totals || {}; list.push({key: k, sup: (q.inv.supplier && q.inv.supplier.name) || '', no: q.inv.number || '', date: q.inv.date || '', due: q.inv.due || '', total: round2(t.payable != null ? t.payable : t.gross || 0), src: 'în coadă', queued: true}); });
+  return list;
+}
+function payInfo(){ const m = new Map(); DAYS.forEach(d => (d.out || []).forEach(o => { if (o.kind === 'inv' && o.key) { const a = m.get(o.key) || []; a.push(Object.assign({date: d.date}, o)); m.set(o.key, a); } })); return m; }
+function invStatus(){
+  const pm = payInfo(), later = S.later || {};
+  return invList().map(x => {
+    const pays = (pm.get(x.key) || []).sort((a, b) => a.date.localeCompare(b.date)), paid = round2(pays.reduce((s, o) => s + (o.amount || 0), 0));
+    // "open" = a real invoice nobody said yet how it was paid
+    return Object.assign(x, {pays, paid, left: round2(x.total - paid), later: !!later[x.key], open: x.total > 0.004 && paid < 0.005 && !later[x.key]});
+  });
+}
+function payables(){ return invStatus().filter(x => x.left > 0.004).sort((a, b) => (b.date || '').localeCompare(a.date || '')); }
+function sigOf(o){ return JSON.stringify(o); }
+function cashSig(date, b){ const d = getDay(date); return sigOf([b && b.prev, b && b.fin, d.cash, d.closed, d.inn.map(x => [x.label, x.doc, x.amount]), d.out.filter(isCash).map(x => [x.label, x.doc, x.amount])]); }
+function gestSig(date, g){ return sigOf([g && g.prev, g && g.fin, g && g.nir, g && g.out, g && g.pv]); }
+// a closed shop with no cash moved has no page in the cash book; pages are numbered over the days that have one
+const hasMove = d => !d.closed || d.inn.length > 0 || d.out.some(isCash);
+// one report number per day since the start date; a report for a period carries the number of its last day
+function gestNo(date){ return startSet() ? Math.round((Date.parse(date) - Date.parse(S.start.date)) / 864e5) + 1 : 1; }
+function movesBefore(date){ let n = 0; if (startSet() && date > S.start.date) eachDate(S.start.date, addDays(date, -1), x => { if (hasMove(getDay(x))) n++; }); return n; }
+
+/* ---- tabs ---- */
+function showTab(t){
+  if (document.body.dataset.tab !== t) toast('');
+  document.body.dataset.tab = t;
+  [['nir', 'paneNir'], ['casa', 'paneCasa'], ['gest', 'paneGest']].forEach(([k, id]) => { $('#' + id).hidden = k !== t; $('#tb-' + k).setAttribute('aria-selected', String(k === t)); });
+  if (t === 'casa') renderCasa();
+  if (t === 'gest') renderGest();
+  if (t !== 'nir') renderCgDir();
+  window.scrollTo(0, 0);
+}
+$('.tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-goto]'); if (b) { showTab(b.dataset.goto); if (b.dataset.goto === 'gest') $('#gStart').open = true; } });
+
+/* ---- Casă ---- */
+const fmtIn = v => v == null ? '' : String(v).replace('.', ',');
+const leiNum = v => { const t = String(v == null ? '' : v).replace(/\s|lei/gi, ''); return /^-?\d{1,3}(\.\d{3})+$/.test(t) ? toNum(t.replace(/\./g, '')) : toNum(t); };
+const dm5 = iso => roDate(iso).slice(0, 5);
+function renderCasa(){
+  if ($('#paneCasa').hidden) return;
+  const D = CDAY, d = getDay(D), ok = startSet(), act = document.activeElement;
+  $('#cStartWarn').hidden = ok;
+  if ($('#dDate') !== act) $('#dDate').value = D;
+  [['zCash', d.cash], ['zCard', d.card], ['zSgr', d.sgr], ['cCounted', d.counted]].forEach(([id, v]) => { if ($('#' + id) !== act) $('#' + id).value = fmtIn(v); });
+  if ($('#zNo') !== act) $('#zNo').value = d.zNo || '';
+  ['zNo', 'zCash', 'zCard', 'zSgr'].forEach(id => { $('#' + id).disabled = !!d.closed; });
+  $('#zClosed').checked = !!d.closed;
+  const miss = [d.cash == null && 'numerar', d.card == null && 'card', d.sgr == null && 'garanții SGR (scrie 0 dacă n-ai)'].filter(Boolean);
+  $('#zNote').textContent = d.closed ? 'Zi fără vânzări: în casă și în gestiune nu intră nimic din vânzări.' :
+    (d.sgr ? 'Garanții SGR: ' + m2(d.sgr) + ' lei = ' + Math.round(d.sgr / 0.5) + ' ambalaje. ' : '') + 'Numerarul intră în registrul de casă (include și garanțiile plătite cash). Cardul nu intră în casă. Garanțiile SGR se scad din vânzări doar la gestiune, pentru că nu au intrat pe NIR.' + (miss.length ? ' Lipsesc: ' + miss.join(', ') + '.' : '');
+  const st = invStatus(), known = new Set(st.map(x => x.key));
+  // invoices dated this day: choose how each one was paid
+  const mine = st.filter(x => x.date === D).sort((a, b) => a.sup.localeCompare(b.sup));
+  $('#cDayInvTitle').textContent = 'Facturile din ' + roDate(D) + (mine.length ? ' (' + mine.length + ')' : '');
+  const btn = (k, x, t) => '<button type="button" class="chip" data-dinv="' + k + '" data-key="' + esc(x.key) + '">' + t + '</button>';
+  $('#dayInvList').innerHTML = mine.length ? mine.map(x => {
+    const left = x.left > 0.004, credit = x.total <= 0.004;
+    const paid = x.pays.map(o => (isCash(o) ? 'cash ' : 'card/transfer ') + m2(o.amount) + (o.date !== D ? ' pe ' + roDate(o.date) : '')).join(', ');
+    let acts = '';
+    if (!credit && left) acts = x.later ? '<span class="chip">la termen</span>' + btn('pay', x, 'Am plătit-o') + (x.pays.length ? '' : btn('unlater', x, 'Anulează „la termen”'))
+      : x.pays.length ? btn('pay', x, 'Am plătit restul') : btn('spotcash', x, 'La livrare: cash') + btn('spotcard', x, 'La livrare: card') + btn('pay', x, 'Altă zi') + btn('later', x, 'La termen');
+    return '<li class="c-row"><span>' + esc(x.sup || 'Furnizor') + '<small>fact. ' + esc(x.no) + ' · ' + esc(x.src) + (x.due ? ' · pe factură, termen ' + roDate(x.due) : '') + '</small>' +
+      (credit ? '<small>notă de credit: nu se plătește</small>' : paid ? '<small class="c-ok">plătită: ' + paid + (left ? ' · rest ' + m2(x.left) : '') + '</small>' : x.later ? '' : '<small class="c-warn">alege cum ai plătit-o</small>') +
+      '</span><span class="c-amt">' + m2(x.total) + '</span><span></span>' + (acts ? '<span class="acts">' + acts + '</span>' : '') + '</li>';
+  }).join('') : '<li class="c-row"><span class="c-info">Nicio factură cu data asta în coadă sau în registru.</span></li>';
+  const row = (x, kind) => {
+    const card = kind === 'out' && !isCash(x);
+    return '<li class="c-row"><span>' + esc(x.label) + (card ? '<small>card sau transfer · nu intră în registrul de casă</small>' : '') +
+      (x.doc ? '<small>Document: ' + esc(x.doc) + '</small>' : '') +
+      (x.kind === 'inv' && !known.has(x.key) ? '<small class="c-warn">factura nu mai e în coadă sau în registru</small>' : '') + '</span><span class="c-amt">' + m2(x.amount) + '</span>' +
+      '<button type="button" class="chip' + (cArm === kind + x.id ? ' bad' : '') + '" data-cdel="' + kind + ':' + x.id + '">' + (cArm === kind + x.id ? 'Confirm' : 'Șterge') + '</button></li>';
+  };
+  $('#outList').innerHTML = d.out.map(x => row(x, 'out')).join('');
+  $('#innList').innerHTML = d.inn.map(x => row(x, 'inn')).join('');
+  const sum = $('#cSum'), warn = [];
+  const book = ok ? cashBook(D < today() ? today() : D) : new Map(), b = book.get(D);
+  if (!ok) { sum.innerHTML = '<span>Fără sold de pornire nu pot calcula casa.</span><span></span>'; $('#cDayState').textContent = ''; }
+  else if (D < S.start.date) { sum.innerHTML = '<span>Ziua e înainte de data de start (' + roDate(S.start.date) + ') și nu intră în registru.</span><span></span>'; $('#cDayState').textContent = ''; }
+  else {
+    sum.innerHTML = '<span>Sold din ziua precedentă</span><span>' + m2(b.prev) + '</span>' +
+      '<span>+ Încasări' + (d.cash && !d.closed ? ' (din care vânzări cash ' + m2(d.cash) + ')' : '') + '</span><span>' + m2(b.inn) + '</span>' +
+      '<span>− Plăți cash</span><span>' + m2(b.out) + '</span><span class="fin">= Sold final în casă</span><span class="fin">' + m2(b.fin) + '</span>';
+    $('#cDayState').innerHTML = b.final ? '<span class="chip ok">definitivă</span> Ziua e completă: o poți da contabilei.' : '<span class="chip bad">provizorie</span> ' + esc(waitText(b, D)) + '.';
+    if (b.fin < -0.004) warn.push('Soldul ar ieși negativ: lipsește o încasare, o sumă e greșită sau soldul de pornire nu e corect.');
+    if (b.fin > 50000) warn.push('Soldul depășește 50.000 lei la sfârșitul zilei (plafonul de casă din Legea 70/2015): depune diferența la bancă în cel mult 2 zile lucrătoare.');
+    if (d.counted != null) { const df = round2(d.counted - b.fin); warn.push(Math.abs(df) < 0.005 ? '✓ Numerarul numărat se potrivește cu soldul.' : (df < 0 ? 'Lipsă de casă: ' : 'Plus de casă: ') + m2(Math.abs(df)) + ' lei față de sold. Verifică încasările și plățile zilei' + (b.final ? '' : ' și dacă ai ales plata la toate facturile zilei') + '.'); }
+    const cashOut = d.out.filter(isCash), bySup = {};
+    cashOut.filter(x => x.kind === 'inv').forEach(x => { bySup[x.sup || x.label] = (bySup[x.sup || x.label] || 0) + x.amount; });
+    Object.entries(bySup).forEach(([k, v]) => { if (v > 5000) warn.push('Plăți cash de ' + m2(v) + ' lei azi către ' + k + ': legea permite cel mult 5.000 lei pe zi către același furnizor.'); });
+    const cashByInv = new Map(); payInfo().forEach((list, key) => { const c = list.filter(isCash).reduce((s, o) => s + o.amount, 0); cashByInv.set(key, c); });
+    cashOut.filter(x => x.kind === 'inv' && (cashByInv.get(x.key) || 0) > 5000.004).forEach(x => warn.push('Factura ' + (x.invNo || '') + ' are plătiți cash în total ' + m2(cashByInv.get(x.key)) + ' lei. Legea 70/2015 interzice plata cash în tranșe a unei facturi peste 5.000 lei: peste 5.000 lei se plătește prin bancă.'));
+    const tot = cashOut.filter(x => x.kind !== 'bank').reduce((s, x) => s + x.amount, 0);
+    if (tot > 10000) warn.push('Plăți cash de ' + m2(tot) + ' lei azi (fără depunerile la bancă): legea permite cel mult 10.000 lei pe zi în total.');
+    if (d.cashSig && d.cashSig !== cashSig(D, b)) warn.push('Ziua s-a modificat după ce ai scos registrul de casă pentru ea. Scoate-l din nou și dă-i contabilei varianta nouă (și zilele de după, dacă le-ai dat).');
+  }
+  $('#cWarn').innerHTML = warn.map(w => '<p class="' + (w.startsWith('✓') ? 'c-info' : 'c-warn') + '">' + esc(w) + '</p>').join('');
+  // where the cash book stands, and the past days that still need something from you
+  if (ok) {
+    const ents = [...book.entries()], lastF = ents.filter(([, x]) => x.final).pop(), firstO = ents.find(([, x]) => !x.final);
+    $('#cHead').textContent = (lastF ? 'Registrul de casă e definitiv până la ' + roDate(lastF[0]) + ' (sold ' + m2(lastF[1].fin) + ' lei). ' : 'Nicio zi definitivă încă în registrul de casă. ') + (firstO ? 'De la ' + roDate(firstO[0]) + ' e provizoriu: ' + firstO[1].gap + '.' : '');
+    const todo = []; eachDate(S.start.date, addDays(today(), -1), x => { if (!salesIn(getDay(x)) || book.open.get(x)) todo.push(x); });
+    $('#cMissing').innerHTML = todo.length ? '<span class="c-warn">De completat (vânzări sau plata facturilor):</span>' + todo.slice(-12).map(x => '<button type="button" class="chip bad" data-cday="' + x + '">' + dm5(x) + '</button>').join('') + (todo.length > 12 ? '<span class="c-info">și încă ' + (todo.length - 12) + '</span>' : '') : '';
+  } else { $('#cHead').textContent = ''; $('#cMissing').innerHTML = ''; }
+  const openAll = st.filter(x => x.open && (!ok || x.date >= S.start.date)).sort((a, b) => a.date.localeCompare(b.date) || a.sup.localeCompare(b.sup));
+  $('#cOpenBox').hidden = !openAll.length;
+  $('#cOpenTitle').textContent = 'Facturi noi: cum le-ai plătit? (' + openAll.length + ')';
+  $('#openInvList').innerHTML = openAll.slice(0, 30).map(x => '<li class="c-row"><span>' + esc(x.sup || 'Furnizor') + '<small>fact. ' + esc(x.no) + ' din <b>' + roDate(x.date) + '</b> · ' + esc(x.src) + '</small></span><span class="c-amt">' + m2(x.total) + '</span><span></span><span class="acts">' +
+    btn('spotcash', x, 'La livrare: cash') + btn('spotcard', x, 'La livrare: card') + btn('pay', x, 'Altă zi') + btn('later', x, 'La termen') + '</span></li>').join('') + (openAll.length > 30 ? '<li class="c-row"><span class="c-info">și încă ' + (openAll.length - 30) + ': apar aici după ce le alegi pe cele de sus</span></li>' : '');
+  const ls = ok ? lastSalesDay() : '';
+  $('#cEst').hidden = !ls;
+  if (ls) { const hc = cashBook(ls).get(ls), he = estBook(ls).get(ls); $('#cEstTxt').textContent = 'Estimativ la ' + roDate(ls) + ': casa ' + m2(hc.fin) + ' lei, marfa ≈ ' + m2(he.estFin) + ' lei' + (he.carryN ? ' (cu ' + he.carryN + (he.carryN === 1 ? ' factură' : ' facturi') + ' din coadă)' : '') + '.'; }
+  const lat = st.filter(x => x.later && x.left > 0.004), over = lat.filter(x => x.due && x.due < today());
+  $('#cLater').hidden = !lat.length;
+  $('#cLaterTxt').textContent = lat.length ? (lat.length === 1 ? 'O factură la termen neplătită' : lat.length + ' facturi la termen neplătite') + ' (' + m2(lat.reduce((s, x) => s + x.left, 0)) + ' lei)' + (over.length ? ', ' + over.length + ' cu termenul de pe factură depășit' : '') + '.' : '';
+}
+$('#cLaterBtn').addEventListener('click', () => { CF = null; $('#cForm').hidden = true; $('#cInvBox').hidden = false; $('#cInvQ').value = ''; renderPick(); $('#cInvBox').scrollIntoView({block: 'start', behavior: 'smooth'}); });
+function setDay(x){ if (!isoOk(x)) return; CDAY = x; CF = null; $('#cForm').hidden = true; $('#cInvBox').hidden = true; cArm = null; renderCasa(); }
+$('#dPrev').addEventListener('click', () => setDay(addDays(CDAY, -1)));
+$('#dNext').addEventListener('click', () => setDay(addDays(CDAY, 1)));
+$('#dToday').addEventListener('click', () => setDay(today()));
+$('#dDate').addEventListener('change', e => setDay(e.target.value));
+$('#cMissing').addEventListener('click', e => { const b = e.target.closest('[data-cday]'); if (b) setDay(b.dataset.cday); });
+async function editDay(fn){ const d = getDay(CDAY); fn(d); await putDay(d); renderCasa(); }
+[['zCash', 'cash'], ['zCard', 'card'], ['zSgr', 'sgr'], ['cCounted', 'counted']].forEach(([id, k]) => $('#' + id).addEventListener('change', e => {
+  const v = leiNum(e.target.value);
+  if (v != null && v < 0) { toast('Suma nu poate fi negativă.', 'bad'); renderCasa(); return; }
+  editDay(d => { d[k] = v == null ? null : round2(v); });
+}));
+$('#zNo').addEventListener('change', e => editDay(d => { d.zNo = e.target.value.trim(); }));
+$('#zClosed').addEventListener('change', e => editDay(d => { d.closed = e.target.checked; if (d.closed) { d.cash = d.cash || 0; d.card = d.card || 0; d.sgr = d.sgr || 0; } }));
+function openForm(mode, kind, title, label, amount, extra){
+  CF = Object.assign({mode, kind}, extra || {});
+  $('#cfTitle').textContent = title; $('#cfLabel').value = label || ''; $('#cfDoc').value = ''; $('#cfAmt').value = amount != null ? fmtIn(amount) : '';
+  $('#cfPay').hidden = kind !== 'inv'; $('#cfSave').textContent = 'Adaugă';
+  $('#cForm').hidden = false; $('#cInvBox').hidden = true;
+  $('#cForm').scrollIntoView({block: 'center', behavior: 'smooth'}); if (kind !== 'inv') setTimeout(() => $(amount != null ? '#cfDoc' : '#cfLabel').focus(), 300);
+}
+// paying an invoice: cash or card, and the day the money left (at delivery = the invoice day; later = the day you paid)
+const cfMethod = () => { const r = document.querySelector('input[name="cfMethod"]:checked'); return r ? r.value : ''; };
+function payNote(){
+  if (!CF || CF.kind !== 'inv') return;
+  const date = $('#cfDate').value, m = cfMethod(), cash = m === 'cash', bits = [];
+  if (!m) bits.push('Alege cum ai plătit-o: cash sau card/transfer.');
+  else if (!cash) bits.push('Plata cu cardul sau prin transfer nu intră în registrul de casă: doar marchează factura ca plătită.' + (isoOk(date) ? '' : ' Data nu e obligatorie.'));
+  else bits.push(isoOk(date) ? 'Intră în registrul de casă pe ' + roDate(date) + ', ziua în care ai dat banii.' : 'Alege ziua în care ai dat efectiv banii: acolo intră plata în registrul de casă.');
+  if (isoOk(date) && isoOk(CF.invDate) && date < CF.invDate) bits.push('Atenție: data plății e înaintea datei facturii (' + roDate(CF.invDate) + '). E corect doar dacă ai dat banii înainte, ca avans.');
+  if (cash && isoOk(date) && startSet() && date < S.start.date) bits.push('E înainte de data de start: nu intră în registru, pentru că e cuprinsă în soldul de pornire.');
+  if (isoOk(date) && date > today()) bits.push('Data plății nu poate fi în viitor.');
+  $('#cfNote').textContent = bits.join(' ');
+  const ch = [[CF.later ? '' : CF.invDate, 'Pe loc, ziua facturii'], [CDAY, 'Ziua deschisă'], [today(), 'Azi']].filter(([x], i, a) => isoOk(x) && x <= today() && !(CF.later && x === CF.invDate) && a.findIndex(([y]) => y === x) === i);
+  $('#cfSave').textContent = cash && isoOk(date) ? 'Salvează: cash, plătită pe ' + dm5(date) : m === 'card' ? 'Salvează: plătită cu cardul' : 'Adaugă';
+  $('#cfDateChips').innerHTML = ch.map(([x, t]) => '<button type="button" class="chip' + (x === date ? ' ok' : '') + '" data-cfd="' + x + '">' + t + ' ' + dm5(x) + '</button>').join('');
+}
+// you say how and on which day you paid: the app never guesses a date (not the invoice day, not the due date)
+function openPay(x){
+  openForm('out', 'inv', 'Plata facturii ' + x.no + ' (' + (x.sup || 'furnizor') + ')', 'Plată factura ' + x.no + ' din ' + roDate(x.date) + ', ' + x.sup, x.left, {key: x.key, sup: x.sup, max: x.left, invDate: x.date, invNo: x.no, later: x.later});
+  document.querySelectorAll('input[name="cfMethod"]').forEach(r => { r.checked = false; });
+  $('#cfDate').value = ''; payNote();
+  setTimeout(() => $('#cfPay').scrollIntoView({block: 'center', behavior: 'smooth'}), 320);
+}
+// paid on the spot = the day the goods and the invoice came; one tap, the full amount
+async function spotPay(x, method){
+  if (!isoOk(x.date) || x.date > today()) { toast('Factura nu are o dată bună; folosește „Plătesc o factură”.', 'bad'); return; }
+  const item = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: 'inv', label: 'Plată factura ' + x.no + ' din ' + roDate(x.date) + ', ' + x.sup, doc: '', amount: x.left, key: x.key, sup: x.sup, invNo: x.no, invDate: x.date, method};
+  const d = getDay(x.date); d.out.push(item); await putDay(d); renderCasa();
+  toast('Factura ' + x.no + ' (' + x.sup + '): plătită la livrare ' + (method === 'card' ? 'cu cardul (nu intră în casă)' : 'cash, intră în registrul de casă') + ', ' + m2(x.left) + ' lei, pe ' + roDate(x.date) + ', ziua facturii. Dacă ai greșit, o ștergi din plățile zilei de ' + roDate(x.date) + '.', 'ok');
+}
+$('#cfPay').addEventListener('change', payNote);
+$('#cfDate').addEventListener('input', payNote);
+$('#cfDateChips').addEventListener('click', e => { const b = e.target.closest('[data-cfd]'); if (b) { $('#cfDate').value = b.dataset.cfd; payNote(); } });
+function invClick(e){
+  const b = e.target.closest('[data-dinv]'); if (!b) return;
+  const x = invStatus().find(y => y.key === b.dataset.key); if (!x) return;
+  const k = b.dataset.dinv;
+  if (k === 'pay') { openPay(x); return; }
+  if (k === 'spotcash' || k === 'spotcard') { spotPay(x, k === 'spotcard' ? 'card' : 'cash'); return; }
+  S.later = Object.assign({}, S.later);
+  if (k === 'later') { S.later[x.key] = today(); toast('Factura ' + x.no + ' e „la termen”. Când o plătești, apeși la ea „Am plătit-o” (sau o alegi din „Plătesc o factură”) și scrii tu cum ai plătit și în ce zi.', 'ok'); }
+  else { delete S.later[x.key]; toast('Factura ' + x.no + ' nu mai e „la termen”: alege cum ai plătit-o.', 'ok'); }
+  saveStore(); renderCasa();
+}
+$('#dayInvList').addEventListener('click', invClick);
+$('#openInvList').addEventListener('click', invClick);
+function renderPick(){
+  const old = $('#cInvOld').checked, st0 = startSet() ? S.start.date : '';
+  const all = payables().filter(x => old || !st0 || x.date >= st0 || x.later).sort((a, b) => (b.later - a.later) || (b.date || '').localeCompare(a.date || '')), late = all.filter(x => x.due && x.due < today());
+  const qw = norm($('#cInvQ').value).split(' ').filter(Boolean), list = all.filter(x => { const h = norm(x.sup + ' ' + x.no + ' ' + roDate(x.date)); return qw.every(w => h.includes(w)); }).slice(0, 60);
+  $('#cInvHead').textContent = all.length ? all.length + (all.length === 1 ? ' factură neplătită' : ' facturi neplătite') + ', rest de plată ' + m2(all.reduce((s, x) => s + x.left, 0)) + ' lei' + (late.length ? '; ' + late.length + ' cu termenul de plată depășit' : '') + '.' : '';
+  $('#cInvList').innerHTML = list.length ? list.map(x => '<button type="button" data-pick="' + esc(x.key) + '"><span>' + esc(x.sup || 'Furnizor') + '<small>fact. ' + esc(x.no) + ' din ' + roDate(x.date) + ' · ' + esc(x.src) + (x.later ? ' · la termen' : '') + (x.due ? ' · termen ' + roDate(x.due) : '') + (x.paid ? ' · plătit deja ' + m2(x.paid) : '') + '</small>' + (x.due && x.due < today() ? '<small class="c-warn">termen depășit</small>' : '') + '</span><span class="c-amt">' + m2(x.left) + '</span></button>').join('')
+    : '<p class="c-info" style="padding:10px 12px">Nicio factură neplătită' + (qw.length ? ' cu ce ai căutat' : '') + '.</p>';
+}
+$('#btnPayInv').addEventListener('click', () => { CF = null; $('#cForm').hidden = true; $('#cInvBox').hidden = !$('#cInvBox').hidden; if (!$('#cInvBox').hidden) { $('#cInvQ').value = ''; renderPick(); } });
+$('#cInvQ').addEventListener('input', renderPick);
+$('#cInvOld').addEventListener('change', renderPick);
+$('#cInvList').addEventListener('click', e => {
+  const b = e.target.closest('[data-pick]'); if (!b) return;
+  const x = payables().find(y => y.key === b.dataset.pick); if (x) openPay(x);
+});
+$('#btnPayBank').addEventListener('click', () => openForm('out', 'bank', 'Depunere numerar la bancă', 'Depunere numerar la bancă', null));
+$('#btnPayOther').addEventListener('click', () => openForm('out', 'other', 'Altă plată în numerar', '', null));
+$('#btnInBank').addEventListener('click', () => openForm('inn', 'bank', 'Ridicare numerar din bancă', 'Ridicare numerar din bancă', null));
+$('#btnInOther').addEventListener('click', () => openForm('inn', 'other', 'Altă încasare în numerar', '', null));
+$('#cfCancel').addEventListener('click', () => { CF = null; $('#cForm').hidden = true; });
+$('#cfSave').addEventListener('click', async () => {
+  if (!CF) return;
+  const label = $('#cfLabel').value.trim(), doc = $('#cfDoc').value.trim(), amt = leiNum($('#cfAmt').value);
+  let date = CDAY, method = 'cash';
+  if (CF.kind === 'inv') {
+    date = $('#cfDate').value; method = cfMethod();
+    if (!method) { toast('Alege cum ai plătit factura: cash sau card/transfer.', 'bad'); return; }
+    if (method === 'card' && !isoOk(date)) date = today();
+    if (!isoOk(date)) { toast('Alege ziua în care ai dat banii: acolo intră plata în registrul de casă.', 'bad'); return; }
+    if (date > today()) { toast('Data plății nu poate fi în viitor.', 'bad'); return; }
+  }
+  if (!label) { toast('Scrie explicația (ce plătești sau ce încasezi).', 'bad'); return; }
+  if (!(amt > 0)) { toast('Scrie suma, mai mare decât 0.', 'bad'); return; }
+  if (CF.kind === 'inv' && amt > CF.max + 0.004) { toast('Suma e mai mare decât restul de plată al facturii (' + m2(CF.max) + ' lei).', 'bad'); return; }
+  const item = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: CF.kind, label, doc, amount: round2(amt)};
+  if (CF.kind === 'inv') Object.assign(item, {key: CF.key, sup: CF.sup, invNo: CF.invNo, invDate: CF.invDate, method});
+  const mode = CF.mode; CF = null; $('#cForm').hidden = true;
+  const d = getDay(date); (mode === 'out' ? d.out : d.inn).push(item); await putDay(d); renderCasa();
+  const where = date === CDAY ? '' : ' (nu în ziua deschisă acum, ' + roDate(CDAY) + ')';
+  if (method === 'card') toast('Factura ' + item.invNo + ' e marcată plătită cu card/transfer: ' + m2(item.amount) + ' lei pe ' + roDate(date) + '. Nu intră în registrul de casă.', 'ok');
+  else toast((mode === 'out' ? 'Plata' : 'Încasarea') + ' de ' + m2(item.amount) + ' lei a intrat în registrul de casă pe ' + roDate(date) + where + '.' + '', 'ok');
+});
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-cdel]'); if (!b) return;
+  const [kind, id] = b.dataset.cdel.split(':');
+  if (cArm !== kind + id) { cArm = kind + id; renderCasa(); setTimeout(() => { if (cArm === kind + id) { cArm = null; renderCasa(); } }, 6000); return; }
+  cArm = null; await editDay(d => { d[kind] = d[kind].filter(x => x.id !== id); }); toast('Am șters rândul.', 'ok');
+});
+$('#btnCasaPdf').addEventListener('click', async () => {
+  if (!startSet()) { toast('Pune întâi soldurile de pornire, la „Gestiune”.', 'bad'); return; }
+  if (CDAY < S.start.date) { toast('Ziua e înainte de data de start.', 'bad'); return; }
+  const b = cashBook(CDAY).get(CDAY);
+  try {
+    await saveBlob('Registru-de-casa_' + CDAY + '.pdf', await buildCashPdf(CDAY, CDAY, true), CDAY, CG_DIR);
+    const note = SAVE_NOTE; SAVE_NOTE = '';
+    toast('Registrul de casă pe ' + roDate(CDAY) + ' a fost salvat.' + (note ? ' ' + note : '') + (b.final ? '' : ' Atenție: e PROVIZORIU, pentru că ' + waitText(b, CDAY) + '. Dă-l contabilei abia când ziua devine definitivă.'), b.final ? 'ok' : 'bad');
+    renderCasa();
+  } catch (e) { saveErr(e, 'PDF'); }
+});
+
+/* ---- Gestiune ---- */
+function renderGest(){
+  if ($('#paneGest').hidden) return;
+  const act = document.activeElement, st = S.start || {};
+  if ($('#stDate') !== act) $('#stDate').value = st.date || '';
+  if ($('#stStock') !== act) $('#stStock').value = fmtIn(st.stock);
+  if ($('#stCash') !== act) $('#stCash').value = fmtIn(st.cash);
+  renderPv(); renderEst();
+  $('#gStartSum').textContent = startSet() ? '· din ' + roDate(st.date) + ': marfă ' + m2(st.stock || 0) + ' lei, casă ' + m2(st.cash || 0) + ' lei' : '· nepuse';
+  if (!startSet()) { $('#gStart').open = true; $('#gHead').textContent = 'Pune soldurile de pornire ca să pot calcula gestiunea.'; $('#gList').innerHTML = ''; $('#gMore').hidden = true; return; }
+  const to = today() < st.date ? st.date : today(), book = stockBook(to), dates = [...book.keys()].reverse();
+  const lastFinal = [...book.entries()].filter(([, g]) => g.final).pop(), firstOpen = [...book.entries()].find(([, g]) => !g.final);
+  $('#gHead').textContent = (lastFinal ? 'Definitiv până la ' + roDate(lastFinal[0]) + ': marfă ' + m2(lastFinal[1].fin) + ' lei la preț de vânzare. ' : 'Nicio zi definitivă încă. ') +
+    (firstOpen ? 'De la ' + roDate(firstOpen[0]) + ' soldurile sunt provizorii: ' + firstOpen[1].gap + '.' : '') +
+    ((neg => neg ? ' Atenție: pe ' + roDate(neg[0]) + ' marfa ar ieși pe minus (' + m2(neg[1].fin) + ' lei). Nu poți vinde mai mult decât ai primit: verifică soldul de pornire, vânzările sau un NIR lipsă.' : '')([...book.entries()].find(([, g]) => g.fin < -0.004)));
+  const empty = dates.filter(dt => { const g = book.get(dt); return !salesIn(getDay(dt)) && !g.nir && !g.pv; }), full = dates.filter(dt => !empty.includes(dt));
+  const show = gAll ? full : full.slice(0, 14);
+  const emptyRow = empty.length ? '<button type="button" class="g-row" data-gday="' + empty[empty.length - 1] + '"><span><span class="chip bad">' + empty.length + (empty.length === 1 ? ' zi' : ' zile') + ' fără vânzări</span> ' + (empty.length === 1 ? roDate(empty[0]) : empty.slice().reverse().map(x => roDate(x).slice(0, 5)).slice(0, 10).join(', ') + (empty.length > 10 ? '…' : '')) + '</span><b>' + m2(book.get(dates[0]).fin) + '</b><small class="c-info">Apasă ca să scrii vânzările din raportul Z, începând cu cea mai veche zi.</small><small></small></button>' : '';
+  $('#gList').innerHTML = emptyRow + show.map(dt => {
+    const g = book.get(dt), d = getDay(dt), chg = d.gestSig && d.gestSig !== gestSig(dt, g);
+    return '<button type="button" class="g-row" data-gday="' + dt + '"><span>' + wday(dt) + ' ' + roDate(dt) + ' <span class="chip ' + (g.final ? 'ok' : g.gap ? 'bad' : '') + '">' + (g.final ? 'definitiv' : 'provizoriu') + '</span>' + (chg ? ' <span class="chip bad">modificat după raport</span>' : '') + '</span><b>' + m2(g.fin) + '</b>' +
+      '<small class="c-info">+ NIR ' + m2(g.nir) + (g.pv ? ' ± preț ' + m2(g.pv) : '') + ' − vânzări ' + m2(g.out) + (g.gap ? ' · ' + esc(g.gap) : '') + '</small><small></small></button>';
+  }).join('');
+  $('#gMore').hidden = gAll || full.length <= 14;
+  if (!$('#rFrom').value) $('#rFrom').value = (today().slice(0, 8) + '01') < st.date ? st.date : today().slice(0, 8) + '01';
+  if (!$('#rTo').value) $('#rTo').value = lastFinal ? lastFinal[0] : st.date;
+}
+$('#gMore').addEventListener('click', () => { gAll = true; renderGest(); });
+let eAll = false;
+// the last day with sales typed in (the day you have reached with the cash book), or today if none yet
+function lastSalesDay(){ let last = ''; if (startSet()) eachDate(S.start.date, today(), x => { if (salesIn(getDay(x))) last = x; }); return last; }
+function renderEst(){
+  if (!startSet()) { $('#eBox').hidden = true; return; }
+  $('#eBox').hidden = false;
+  const ls = lastSalesDay(), qMax = QUEUE.reduce((a, q) => { const dt = nirDateFor(q.inv); return isoOk(dt) && dt > a && dt <= today() ? dt : a; }, '');
+  const to = [ls, qMax, S.start.date].filter(Boolean).sort().pop();
+  const cb = cashBook(to), eb = estBook(to), dates = [...eb.keys()].reverse(), show = eAll ? dates : dates.slice(0, 10);
+  const hd = ls ? eb.get(ls) : null, hc = ls ? cb.get(ls) : null;
+  $('#eHead').textContent = ls ? 'La ' + roDate(ls) + ', ultima zi cu vânzări introduse: în casă ' + m2(hc.fin) + ' lei, marfă ≈ ' + m2(hd.estFin) + ' lei' + (hd.carryN ? ' (din care ' + m2(hd.carry) + ' lei din ' + hd.carryN + (hd.carryN === 1 ? ' factură' : ' facturi') + ' încă în coadă, estimat)' : '') + '.' : 'Încă nu ai introdus vânzări.';
+  $('#eList').innerHTML = '<div class="e-row e-h"><span>Ziua</span><span>Casa</span><span>Marfa</span></div>' + show.map(dt => {
+    const c = cb.get(dt), e = eb.get(dt), d = getDay(dt), notes = [];
+    if (!salesIn(d)) notes.push('vânzările nu sunt introduse: casa și marfa nu le cuprind încă');
+    if (e.qN) notes.push('+ ' + m2(e.qVal) + ' lei din ' + e.qN + (e.qN === 1 ? ' factură' : ' facturi') + ' în coadă (estimat)');
+    if (e.qBad) notes.push(e.qBad + (e.qBad === 1 ? ' factură din coadă nu a putut fi estimată' : ' facturi din coadă nu au putut fi estimate'));
+    if (c.final && e.final && !e.carry) notes.push('definitiv');
+    return '<div class="e-row"><span>' + wday(dt) + ' ' + roDate(dt) + '</span><b>' + m2(c.fin) + '</b><b>' + m2(e.estFin) + '</b>' + (notes.length ? '<small>' + esc(notes.join(' · ')) + '</small>' : '') + '</div>';
+  }).join('');
+  $('#eMore').hidden = eAll || dates.length <= 10;
+  return {ls, hc, hd};
+}
+$('#eMore').addEventListener('click', () => { eAll = true; renderEst(); });
+function renderPv(){
+  const all = []; DAYS.forEach(d => (d.pv || []).forEach(x => all.push(Object.assign({date: d.date}, x))));
+  all.sort((a, b) => b.date.localeCompare(a.date));
+  $('#pvList').innerHTML = all.slice(0, 40).map(x => '<li class="c-row"><span>' + roDate(x.date) + ' · ' + esc(x.label) + (x.doc ? '<small>PV nr. ' + esc(x.doc) + '</small>' : '') + '</span><span class="c-amt">' + (x.amount > 0 ? '+' : '') + m2(x.amount) + '</span><button type="button" class="chip' + (cArm === 'pv' + x.id ? ' bad' : '') + '" data-pvdel="' + x.date + ':' + x.id + '">' + (cArm === 'pv' + x.id ? 'Confirm' : 'Șterge') + '</button></li>').join('');
+  if (!$('#pvDate').value) $('#pvDate').value = today();
+}
+$('#pvAdd').addEventListener('click', async () => {
+  const date = $('#pvDate').value, amt = leiNum($('#pvAmt').value), doc = $('#pvDoc').value.trim(), label = $('#pvExp').value.trim() || 'Modificare de preț conform proces-verbal';
+  if (!isoOk(date)) { toast('Alege data procesului-verbal.', 'bad'); return; }
+  if (amt == null || Math.abs(amt) < 0.005) { toast('Scrie diferența de valoare (cu minus dacă ai ieftinit).', 'bad'); return; }
+  if (startSet() && date < S.start.date) { toast('Data e înainte de data de start; nu intră în gestiune.', 'bad'); return; }
+  const d = getDay(date); d.pv = (d.pv || []).concat({id: Date.now().toString(36), label, doc, amount: round2(amt)}); await putDay(d);
+  $('#pvAmt').value = ''; $('#pvDoc').value = ''; $('#pvExp').value = '';
+  renderGest(); toast('Modificarea de preț de ' + m2(amt) + ' lei a intrat în gestiune pe ' + roDate(date) + '.', 'ok');
+});
+$('#pvList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-pvdel]'); if (!b) return;
+  const [date, id] = b.dataset.pvdel.split(':');
+  if (cArm !== 'pv' + id) { cArm = 'pv' + id; renderPv(); setTimeout(() => { if (cArm === 'pv' + id) { cArm = null; renderPv(); } }, 6000); return; }
+  cArm = null; const d = getDay(date); d.pv = (d.pv || []).filter(x => x.id !== id); await putDay(d); renderGest(); toast('Am șters modificarea de preț.', 'ok');
+});
+$('#gList').addEventListener('click', e => { const b = e.target.closest('[data-gday]'); if (b) { CDAY = b.dataset.gday; showTab('casa'); } });
+function saveStart(){
+  const date = $('#stDate').value, stock = leiNum($('#stStock').value), cash = leiNum($('#stCash').value);
+  S.start = isoOk(date) ? {date, stock: stock == null ? 0 : round2(stock), cash: cash == null ? 0 : round2(cash)} : null;
+  saveStore(); renderGest(); renderCasa();
+  if (S.start) toast('Solduri de pornire: din ' + roDate(date) + ', marfă ' + m2(S.start.stock) + ' lei, casă ' + m2(S.start.cash) + ' lei. Tot ce urmează s-a recalculat.', 'ok');
+}
+['stDate', 'stStock', 'stCash'].forEach(id => $('#' + id).addEventListener('change', saveStart));
+function rangeOk(){
+  const a = $('#rFrom').value, z = $('#rTo').value;
+  if (!startSet()) { toast('Pune întâi soldurile de pornire.', 'bad'); return null; }
+  if (!isoOk(a) || !isoOk(z) || a > z) { toast('Alege perioada: „De la” trebuie să fie înainte de „Până la”.', 'bad'); return null; }
+  return [a < S.start.date ? S.start.date : a, z];
+}
+$('#btnGestPdf').addEventListener('click', async () => {
+  const r = rangeOk(); if (!r) return;
+  const g = stockBook(r[1]).get(r[1]);
+  try { await saveBlob('Raport-de-gestiune_' + r[0] + '_' + r[1] + '.pdf', await buildGestPdf(r[0], r[1], true), r[1], CG_DIR); const note = SAVE_NOTE; SAVE_NOTE = ''; toast('Raportul de gestiune ' + roDate(r[0]) + ' – ' + roDate(r[1]) + ' a fost salvat.' + (note ? ' ' + note : '') + (g && !g.final ? ' Atenție: e PROVIZORIU, pentru că ' + (g.wait ? roDate(g.wait.date) + ': ' + g.wait.gap : g.gap) + '.' : ''), g && !g.final ? 'bad' : 'ok'); renderGest(); } catch (e) { saveErr(e, 'PDF'); }
+});
+$('#btnCasaRange').addEventListener('click', async () => {
+  const r = rangeOk(); if (!r) return;
+  const c = cashBook(r[1]).get(r[1]);
+  try { await saveBlob('Registru-de-casa_' + r[0] + '_' + r[1] + '.pdf', await buildCashPdf(r[0], r[1], true), r[1], CG_DIR); const note = SAVE_NOTE; SAVE_NOTE = ''; toast('Registrul de casă ' + roDate(r[0]) + ' – ' + roDate(r[1]) + ' a fost salvat (o filă pe zi).' + (note ? ' ' + note : '') + (c && !c.final ? ' Atenție: e PROVIZORIU de la ' + roDate(c.wait.date) + ', pentru că ' + c.wait.gap + '.' : ''), c && !c.final ? 'bad' : 'ok'); } catch (e) { saveErr(e, 'PDF'); }
+});
+
+/* ---- PDF: Registru de casă (14-4-7) and Raport de gestiune ---- */
+const PW = 595.28, PH = 841.89, PMUTE = '0.38 0.38 0.44', PHEAD = '0.91 0.91 0.93', PTOT = '0.95 0.95 0.96';
+function tableKit(p, ML, cw, al){
+  const cx = cw.reduce((a, w, i) => (a.push(a[i] + w), a), [ML]), CWd = cx[cx.length - 1] - ML;
+  const grid = (top, h) => { p.line(ML, top, ML + CWd, top); p.line(ML, top + h, ML + CWd, top + h); cx.forEach(x => p.line(x, top, x, top + h)); };
+  const cell = (i, lines, top, h, bold, size) => { size = size || 8; let ty = top + (h - lines.length * (size + 2)) / 2 + size - 0.5; for (const l of lines) { const a = al[i], x = a === 'l' ? cx[i] + 3 : a === 'r' ? cx[i + 1] - 3 : (cx[i] + cx[i + 1]) / 2; p.text(l, x, ty, size, {a, b: bold}); ty += size + 2; } };
+  return {cx, CW: CWd, grid, cell};
+}
+function signBlock(p, y, ML, W, left, right, who){
+  p.text(left, ML, y, 8.5, {b: 1}); p.text(right, W / 2 + 20, y, 8.5, {b: 1});
+  if (who) p.text(who, ML, y + 13, 8.5);
+  p.line(ML, y + 28, ML + 150, y + 28); p.line(W / 2 + 20, y + 28, W / 2 + 190, y + 28);
+  p.text('nume, semnătură', ML, y + 37, 6.5, {c: PMUTE}); p.text('nume, semnătură', W / 2 + 20, y + 37, 6.5, {c: PMUTE});
+}
+function cashPages(from, to){
+  fontInit();
+  const W = PW, H = PH, ML = 36, MR = 36, mm = 2.8346, pages = [], book = cashBook(to), co = S.company || {};
+  const cw = [11, 30, 16, 0, 27, 27].map(v => v * mm); cw[3] = W - ML - MR - cw.reduce((a, b) => a + b, 0);
+  const HD = ['Nr. crt.', 'Nr. act casă', 'Nr. anexă', 'Explicații', 'Încasări', 'Plăți'], AL = ['c', 'l', 'c', 'l', 'r', 'r'];
+  let fn = movesBefore(from);
+  eachDate(from, to, date => {
+    const b = book.get(date); if (!b) return;
+    const d = getDay(date);
+    if (from !== to && !hasMove(d)) return;
+    if (hasMove(d)) fn++;
+    let p, y, T;
+    const head = (cont) => {
+      p = pdfPageApi(H); pages.push(p); T = tableKit(p, ML, cw, AL); y = 40;
+      p.segs([['Unitatea: ', 0], [co.name || '—', 1]], ML, y, 9); p.text('Cod 14-4-7A', W - MR, y, 7, {a: 'r', c: PMUTE});
+      y += 13; p.segs([['CUI: ', 0], [co.cui || '—', 1]], ML, y, 9);
+      y += 28; p.text('REGISTRU DE CASĂ', W / 2, y, 14, {b: 1, a: 'c'});
+      y += 16; p.segs([['Contul: ', 0], ['5311 „Casa în lei”', 1]], W / 2, y, 9, 'c');
+      y += 14; p.segs([['Data: ', 0], [roDate(date), 1], ['          Fila nr. ', 0], [String(Math.max(fn, 1)) + (cont ? ' (continuare)' : ''), 1]], W / 2, y, 9.5, 'c');
+      if (!b.final) { y += 13; wrapTxt('PROVIZORIU: ' + waitText(b, date) + '.', W - ML - MR, 8, 1).forEach((l, i) => { if (i) y += 10; p.text(l, W / 2, y, 8, {a: 'c', b: 1, c: '0.69 0.15 0.11'}); }); }
+      y += 14; const hH = 20; p.fill(ML, y, T.CW, hH, PHEAD); HD.forEach((h, i) => T.cell(i, [h], y, hH, 1, 7.5)); T.grid(y, hH); y += hH;
+    };
+    head(false);
+    const rows = [{exp: 'Report / Sold ziua precedentă', inc: b.prev, bold: 1}];
+    let k = 1;
+    if (d.closed) rows.push({exp: 'Magazin închis: fără vânzări'});
+    else if (d.cash) rows.push({n: k++, act: 'Raport Z' + (d.zNo ? ' nr. ' + d.zNo : ''), exp: 'Încasări din vânzări în numerar, conform raportului Z', inc: d.cash});
+    else if (d.cash == null) rows.push({exp: 'Vânzările în numerar ale zilei nu au fost introduse'});
+    d.inn.forEach(x => rows.push({n: k++, act: x.doc, exp: x.label, inc: x.amount}));
+    d.out.filter(isCash).forEach(x => rows.push({n: k++, act: x.doc, exp: x.label, pl: x.amount}));
+    rows.forEach(r => {
+      const ex = wrapTxt(r.exp || '', cw[3] - 6, 8, r.bold), ac = wrapTxt(r.act || '', cw[1] - 6, 8, 0), h = Math.max(ex.length, ac.length, 1) * 10 + 6;
+      if (y + h > H - 150) head(true);
+      if (r.bold) p.fill(ML, y, T.CW, h, PTOT);
+      T.cell(0, [r.n ? String(r.n) : ''], y, h); T.cell(1, ac, y, h); T.cell(3, ex, y, h, r.bold); T.cell(4, [r.inc != null ? m2(r.inc) : ''], y, h, r.bold); T.cell(5, [r.pl != null ? m2(r.pl) : ''], y, h, r.bold);
+      T.grid(y, h); y += h;
+    });
+    [['TOTAL (sold precedent + încasări / plăți)', round2(b.prev + b.inn), b.out], ['SOLD ZIUA (sold final de casă)', b.fin, null]].forEach(([lab, inc, pl]) => {
+      p.fill(ML, y, T.CW, 16, PTOT); T.cell(3, [lab], y, 16, 1); T.cell(4, [m2(inc)], y, 16, 1); T.cell(5, [pl != null ? m2(pl) : ''], y, 16, 1); T.grid(y, 16); y += 16;
+    });
+    // the unused part of the page is struck through, as on the printed register
+    const sy = Math.max(y + 34, H - 140);
+    if (sy - y > 60) { p.line(ML + T.CW, y + 8, ML, sy - 22, 0.6); p.text('rânduri neutilizate', ML + T.CW / 2, (y + sy) / 2 - 4, 6.5, {a: 'c', c: PMUTE}); }
+    signBlock(p, sy, ML, W, 'Casier,', 'Compartiment financiar-contabil,', S.gestionar);
+    p.text('Exemplarul 1 rămâne la casier; exemplarul 2 merge la contabilitate, cu documentele justificative.', ML, sy + 50, 6.5, {c: PMUTE});
+    p.text('Generat cu NIR rapid la ' + roDate(today()) + '. Sumele sunt în lei.', ML, H - 30, 6.5, {c: PMUTE});
+  });
+  return pages;
+}
+function gestPages(from, to){
+  fontInit();
+  const W = PW, H = PH, ML = 32, MR = 32, mm = 2.8346, pages = [], book = stockBook(to), co = S.company || {};
+  const cw = [10, 17, 19, 19, 0, 27, 27].map(v => v * mm); cw[4] = W - ML - MR - cw.reduce((a, b) => a + b, 0);
+  const HD = ['Nr. crt.', 'Felul doc.', 'Nr. doc.', 'Data', 'Explicații', 'Intrări', 'Ieșiri'], AL = ['c', 'c', 'c', 'c', 'l', 'r', 'r'];
+  const last = book.get(to), firstB = book.get(from);
+  let p, y, T;
+  const head = (first) => {
+    p = pdfPageApi(H); pages.push(p); T = tableKit(p, ML, cw, AL); y = 38;
+    if (first) {
+      p.segs([['Unitatea: ', 0], [co.name || '—', 1], ['     CUI: ', 0], [co.cui || '—', 1]], ML, y, 9);
+      y += 13; p.segs([['Gestiunea: ', 0], [S.gest || 'Magazin', 1]], ML, y, 9);
+      y += 26; p.text('RAPORT DE GESTIUNE', W / 2, y, 14, {b: 1, a: 'c'});
+      y += 16; p.segs([['Nr. ', 0], [String(gestNo(to)), 1], ['     Perioada: ', 0], [roDate(from) + ' – ' + roDate(to), 1], ['     Data întocmirii: ', 0], [roDate(today()), 1]], W / 2, y, 9.5, 'c');
+      y += 12; p.text('Evidență global-valorică, la preț de vânzare cu amănuntul (cu TVA). Garanțiile SGR nu fac parte din gestiune și sunt scăzute din vânzări.', W / 2, y, 7, {a: 'c', c: PMUTE});
+      if (last && !last.final) { y += 13; const w = last.wait || {date: to, gap: last.gap}; wrapTxt('PROVIZORIU: de la ' + roDate(w.date) + ' soldurile nu sunt definitive (' + w.gap + ').', W - ML - MR, 8, 1).forEach(l => { p.text(l, W / 2, y, 8, {a: 'c', b: 1, c: '0.69 0.15 0.11'}); y += 10; }); y -= 10; }
+      y += 14;
+    }
+    const hH = 20; p.fill(ML, y, T.CW, hH, PHEAD); HD.forEach((h, i) => T.cell(i, [h], y, hH, 1, 7.5)); T.grid(y, hH); y += hH;
+  };
+  head(true);
+  let k = 1, tin = 0, tout = 0, docs = 0, pvs = 0;
+  const put = (r) => {
+    if (r.n) docs++; if (r.fel === 'PV') pvs++;
+    const ex = wrapTxt(r.exp || '', cw[4] - 6, 8, r.bold), h = Math.max(ex.length, 1) * 10 + 6;
+    if (y + h > H - 130) head(false);
+    if (r.shade) p.fill(ML, y, T.CW, h, r.shade);
+    T.cell(0, [r.n ? String(r.n) : ''], y, h); T.cell(1, [r.fel || ''], y, h); T.cell(2, [r.nr || ''], y, h); T.cell(3, [r.dt || ''], y, h);
+    T.cell(4, ex, y, h, r.bold); T.cell(5, [r.inc != null ? m2(r.inc) : ''], y, h, r.bold); T.cell(6, [r.out != null ? m2(r.out) : ''], y, h, r.bold);
+    T.grid(y, h); y += h;
+  };
+  put({exp: 'Sold precedent, la începutul zilei de ' + roDate(from), inc: firstB ? firstB.prev : 0, bold: 1, shade: PTOT});
+  eachDate(from, to, date => {
+    const g = book.get(date), d = getDay(date); if (!g) return;
+    const nd = nirDay(date);
+    if (!salesIn(d) && !nd.length && !(d.pv || []).length) { put({dt: roDate(date), exp: 'Fără documente; vânzările nu au fost introduse. Sold ' + m2(g.fin) + ' lei (provizoriu)'}); return; }
+    nd.forEach(r => { const v = round2(r.model.totals.val || 0); tin += v; put({n: k++, fel: r.stornoOf ? 'NIR storno' : 'NIR', nr: (r.serie ? r.serie + ' ' : '') + r.nr, dt: roDate(r.date), exp: (r.supName || '') + ', fact. ' + (r.invNo || '') + (r.stornoOf ? ' (stornare NIR ' + r.stornoOf + ')' : ''), inc: v}); });
+    (d.pv || []).forEach(x => { const v = round2(x.amount || 0); if (v >= 0) tin += v; else tout -= v; put({n: k++, fel: 'PV', nr: x.doc || '', dt: roDate(date), exp: x.label || 'Modificare de preț', inc: v >= 0 ? v : null, out: v < 0 ? -v : null}); });
+    if (d.closed) put({dt: roDate(date), exp: 'Magazin închis: fără vânzări'});
+    else if (salesIn(d)) { tout += g.out; put({n: k++, fel: 'Raport Z', nr: d.zNo || '', dt: roDate(date), exp: 'Vânzări cu amănuntul: numerar ' + m2(d.cash || 0) + ' + card ' + m2(d.card || 0) + ' − garanții SGR ' + m2(d.sgr || 0), out: g.out}); }
+    else put({dt: roDate(date), exp: 'Vânzările zilei nu au fost introduse'});
+    put({exp: 'Sold la sfârșitul zilei ' + roDate(date) + ': ' + m2(g.fin) + ' lei' + (g.final ? '' : ' (provizoriu)'), shade: '0.97 0.97 0.98'});
+  });
+  const prev0 = firstB ? firstB.prev : 0;
+  put({exp: 'Total intrări în perioadă', inc: round2(tin), bold: 1, shade: PTOT});
+  put({exp: 'Total ieșiri în perioadă', out: round2(tout), bold: 1, shade: PTOT});
+  put({exp: 'TOTAL (sold precedent + intrări / ieșiri)', inc: round2(prev0 + tin), out: round2(tout), bold: 1, shade: PTOT});
+  put({exp: 'SOLD FINAL la sfârșitul zilei de ' + roDate(to) + (last && !last.final ? ' (provizoriu)' : ''), inc: last ? last.fin : 0, bold: 1, shade: PTOT});
+  if (y + 90 > H - 50) { p = pdfPageApi(H); pages.push(p); y = 60; }
+  p.text('Anexe: ' + docs + (docs === 1 ? ' document' : ' documente') + ' (NIR-uri, rapoarte Z' + (pvs ? ', procese-verbale' : '') + ').', ML, y + 18, 8);
+  signBlock(p, y + 42, ML, W, 'Gestionar,', 'Primit, compartiment financiar-contabil (data și semnătura),', S.gestionar);
+  pages.forEach((pg, i) => pg.text('Raport de gestiune ' + roDate(from) + ' – ' + roDate(to) + ' · pagina ' + (i + 1) + ' din ' + pages.length + ' · generat cu NIR rapid la ' + roDate(today()), ML, H - 24, 6.5, {c: PMUTE}));
+  return pages;
+}
+// mark: the PDF went to the accountant, so a later change to these days is shown
+async function markPrinted(from, to, kind){
+  const cb = kind === 'cash' ? cashBook(to) : stockBook(to);
+  const list = []; eachDate(from, to, date => { const d = getDay(date), b = cb.get(date); if (!b || !salesIn(d)) return; const sg = kind === 'cash' ? cashSig(date, b) : gestSig(date, b); if (d[kind === 'cash' ? 'cashSig' : 'gestSig'] !== sg) { d[kind === 'cash' ? 'cashSig' : 'gestSig'] = sg; list.push(d); } });
+  for (const d of list) await putDay(d);
+}
+async function buildCashPdf(from, to, mark){ const pg = cashPages(from, to); if (mark) await markPrinted(from, to, 'cash'); return pdfSerialize(pg.map(x => ({ops: x.ops})), PW, PH, 'Registru de casa ' + from + (to !== from ? ' - ' + to : '')); }
+async function buildGestPdf(from, to, mark){ const pg = gestPages(from, to); if (mark) await markPrinted(from, to, 'gest'); return pdfSerialize(pg.map(x => ({ops: x.ops})), PW, PH, 'Raport de gestiune ' + from + ' - ' + to); }
+function renderCgDir(){
+  const ym = (CDAY || today()).slice(0, 7);
+  document.querySelectorAll('[data-dirnote]').forEach(el => { el.textContent = !DIR.ok ? 'Fișierele se salvează în Descărcări (Download): telefonul nu permite alegerea unui dosar.' : DIR.set ? 'PDF-urile se salvează în „' + DIR.mainLabel() + ' / ' + DIR.monthDir(ym, CG_DIR) + '”, câte un dosar pe lună, lângă dosarele cu NIR-uri. E același dosar ales la NIR.' : 'Acum PDF-urile merg în Descărcări (Download). Alege o dată dosarul (același ca la NIR) și rămâne ales.'; });
+  document.querySelectorAll('[data-dirpick]').forEach(el => { el.hidden = !DIR.ok; el.textContent = DIR.set ? 'Schimbă dosarul' : 'Alege dosarul'; });
+}
+document.addEventListener('click', async e => {
+  if (!e.target.closest('[data-dirpick]')) return;
+  try { await DIR.pick(); renderDir(); renderCgDir(); toast('Gata: fișierele se salvează de acum în „' + DIR.mainLabel() + '”.', 'ok'); }
+  catch (x) { if (x && x.name === 'AbortError') return; toast('Dosarul nu a putut fi ales. Fișierele merg în continuare în Descărcări.', 'bad'); }
+});
+DIR.load().then(renderCgDir).catch(() => {});
+loadDays().then(() => { renderCasa(); renderGest(); });
+
 /* ---------------- runtime capabilities (only inside Claude) ---------------- */
 if (window.claude && typeof window.claude.use === 'function') {
   window.claude.use('downloads').then(d => { downloads = d; }, () => {});
@@ -2948,7 +3746,10 @@ ${[
 </Invoice>`;
 
 
-window.nirRapid = {calc: inv => compute(inv), exportXlsx: () => buildXlsx(currentModel()), exportPdf: () => buildNirPdf(currentModel()), state: () => ({S, C, REG, PRICES, QUEUE}), dates: {readyDate, spvDeadline, isWorkday}, reload: async () => { await loadRegister(); render(); }};
+window.nirRapid = {calc: inv => compute(inv), exportXlsx: () => buildXlsx(currentModel()), exportPdf: () => buildNirPdf(currentModel()), state: () => ({S, C, REG, PRICES, QUEUE, DAYS}), dates: {readyDate, spvDeadline, isWorkday}, reload: async () => { await loadRegister(); render(); renderCasa(); renderGest(); },
+  books: to => { const c = cashBook(to), g = stockBook(to); return [...g.keys()].map(d => [d, c.get(d), (({prev, nir, pv, out, fin, gap, final}) => ({prev, nir, pv, out, fin, gap, final}))(g.get(d))]); }, payables: () => payables(), backup: () => backupData(),
+  est: to => [...estBook(to)].map(([d, x]) => [d, x.estFin, x.qVal, x.qN, x.qBad, x.fin]), qest: () => QUEUE.map(q => [q.key, nirDateFor(q.inv), (estimate(q) || {}).val ?? null]),
+  pdf: async (kind, from, to) => { const b = kind === 'cash' ? await buildCashPdf(from, to, false) : await buildGestPdf(from, to, false); const u8 = new Uint8Array(await b.arrayBuffer()); let s = ''; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(s); }};
 if (!S.company) $('#settings').open = true;
 try { applyInvoice(parseUBL(EXAMPLE), true); } catch (e) { setStatus('Exemplul nu a putut fi încărcat.', 'bad'); }
 loadRegister().then(loadQueue).then(async () => {
