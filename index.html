@@ -155,6 +155,8 @@ button.chip.on{background:var(--carbon);border-color:var(--carbon);color:var(--o
 .ask{margin-top:10px;padding:12px;border:1px solid var(--amber);border-radius:10px;background:var(--amber-soft);color:var(--ink)}
 .ask p{margin:0;font-size:.9rem;line-height:1.45}
 .q-why{color:var(--bad);font-size:.8rem;line-height:1.35}
+.q-pay{grid-column:1 / -1;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:.8rem;color:var(--ink-2)}
+.q-pay > span{margin-right:2px}
 .btn.danger{border-color:var(--bad);color:var(--bad)}
 @media (max-width:520px){.q-item{grid-template-columns:minmax(0,1fr) auto}.q-item .chip{grid-column:2}}
 .src{display:grid;gap:8px;padding:12px;margin-top:10px;border:1px solid var(--rule);border-radius:10px;background:var(--paper)}
@@ -1173,6 +1175,7 @@ const PAST_RE = /\b(volum|lunar|lunara|luna|lunii|trimestr\w*|anual\w*|target|pr
 const DISC_LABEL = {disc: 'Reducere la marfa de pe factură: scade costul', discPast: 'Reducere pentru cumpărături anterioare: nu intră în NIR'};
 const KIND_LABEL = {goods: 'Marfă sau revândut pe bon: intră în NIR', service: 'Transport / serviciu: intră în costul mărfii', packaging: 'Ambalaj facturat: cont 381, nu intră la raft', deposit: 'Garanție SGR: fără adaos, fără TVA'};
 const digits = s => String(s || '').replace(/\D/g, '');
+const invPayOf = t => { t = t || {}; const v = t.payable != null ? t.payable : t.gross; return v == null ? null : round2(v); };
 function invKey(inv){ return digits(inv.supplier && inv.supplier.cui) + '|' + String(inv.number || '').toUpperCase().replace(/\s+/g, ''); }
 // same invoice = same supplier and number in the same year (small suppliers restart their numbering every January)
 function sameInv(r, inv){ return r.invKey === invKey(inv) && (!isoOk(r.invDate) || !isoOk(inv.date) || r.invDate.slice(0, 4) === inv.date.slice(0, 4)); }
@@ -1805,7 +1808,7 @@ async function onFile(files){
     msg = 'Factura ' + esc(invLabel(inv)) + ' a fost citită' + (rows ? ': ' + rows : '') + '. ';
     if (r.done.length) msg += 'Are deja NIR nr. ' + r.done[0].rec.nr + '.';
     else if (!String(inv.number || '').trim()) msg += 'Fără număr de factură nu intră în coadă.';
-    else msg += (r.again.length ? 'Era deja în coadă. ' : 'A intrat în coadă. ') + (dayClosed(inv.date) ? 'Ziua ei s-a închis: poate primi NIR acum.' : isoOk(inv.date) ? 'Primește NIR din ' + roDate(readyDate(inv.date)) + ', după ce se închide ziua ei.' : '');
+    else msg += (r.again.length ? 'Era deja în coadă. ' : 'A intrat în coadă. ') + (dayClosed(inv.date) ? 'Ziua ei s-a închis: poate primi NIR acum.' : isoOk(inv.date) ? 'Primește NIR din ' + roDate(readyDate(inv.date)) + ', după ce se închide ziua ei.' : '') + (inv.docType === 'CreditNote' ? '' : ' Cum ai plătit-o alegi direct la ea, în coadă.');
   } else {
     msg = 'Am citit ' + got.length + ' facturi: ' + [r.added.length && r.added.length + ' noi în coadă', r.again.length && r.again.length + ' erau deja în coadă', r.done.length && r.done.length + ' au deja NIR', r.skipped && r.skipped + ' fără număr de factură'].filter(Boolean).join(', ') + '.';
   }
@@ -1867,21 +1870,30 @@ function estimate(q){
   EST.set(q.key, {sig, e});
   return e;
 }
-let qArm = null, BATCH_RUNNING = false;
+let qArm = null, qUndo = null, BATCH_RUNNING = false;
 // ready = the day has closed (some may need you before they get their number); wait = the day has not closed yet
 function qGroups(){
   const g = {ready: [], wait: []};
   qSorted().forEach(q => { const x = {q, e: estimate(q)}; (dayClosed(q.inv.date) ? g.ready : g.wait).push(x); });
   return g;
 }
-function qItemHtml({q, e}, kind, first){
+// how a queued invoice was paid: you say it now, it stays on the invoice after the NIR (same key in the queue and in the register)
+function qPayHtml(x){
+  if (!x || !(x.total > 0.004)) return '';   // a credit note is not paid
+  const b = (k, t, cls) => '<button type="button" class="chip' + (cls || '') + '" data-qpay="' + k + '" data-key="' + esc(x.key) + '">' + t + '</button>';
+  if (x.pays.length) return '<div class="q-pay"><span class="c-ok">Plătită: ' + x.pays.map(o => (isCash(o) ? 'cash ' : 'card ') + m2(o.amount) + ' pe ' + dm5(o.date)).join(', ') + (x.left > 0.004 ? ' · rest ' + m2(x.left) : '') + '</span>' +
+    (x.left > 0.004 ? b('pay', 'Am plătit restul') : '') + b('undo', qUndo === x.key ? 'Confirm anularea' : 'Anulează plata', qUndo === x.key ? ' bad' : '') + '</div>';
+  if (x.later) return '<div class="q-pay"><span>Plata: la termen, neplătită încă</span>' + b('pay', 'Am plătit-o') + b('unlater', 'Anulează „la termen”') + '</div>';
+  return '<div class="q-pay"><span class="c-warn">De plată ' + m2(x.total) + ' lei: cum ai plătit-o?</span>' + b('spotcash', 'La livrare: cash') + b('spotcard', 'La livrare: card') + b('pay', 'Altă zi') + b('later', 'La termen') + '</div>';
+}
+function qItemHtml({q, e}, kind, first, ps){
   const inv = q.inv, sp = (inv.supplier && inv.supplier.name) || 'Furnizor necunoscut', why = e ? e.why : 'nu s-a putut calcula';
   const st = kind === 'wait' ? (isoOk(inv.date) ? 'primește NIR din ' + roDate(readyDate(inv.date)) : 'fără dată') : why ? '' : '<span class="chip ok">gata</span>';
   return '<li class="q-item' + (S.qKey === q.key ? ' cur' : '') + '"><button type="button" class="q-open" data-q="open" data-key="' + esc(q.key) + '">' +
     '<span class="l-name">' + (roDate(inv.date) || '—') + ' · ' + esc(sp) + '</span><span class="l-sub">' + (inv.docType === 'CreditNote' ? 'storno ' : 'fact. ') + esc(inv.number || '?') + (st ? ' · ' + st : '') + '</span>' +
     (kind === 'ready' && why ? '<span class="q-why">' + (first ? 'Lotul se oprește aici: ' : 'Va cere verificare: ') + esc(why.length > 150 ? why.slice(0, 148) + '…' : why) + '</span>' : '') + '</button>' +
     '<span class="q-val"><b>' + (e ? '≈ ' + m2(e.val) : '—') + '</b><small>' + (e ? 'cost ' + m2(e.cost) : '') + '</small></span>' +
-    '<button type="button" class="chip' + (qArm === q.key ? ' bad' : '') + '" data-q="del" data-key="' + esc(q.key) + '">' + (qArm === q.key ? 'Confirm' : 'Scoate') + '</button></li>';
+    '<button type="button" class="chip' + (qArm === q.key ? ' bad' : '') + '" data-q="del" data-key="' + esc(q.key) + '">' + (qArm === q.key ? 'Confirm' : 'Scoate') + '</button>' + (ps ? qPayHtml(ps.get(payKey(q.key, inv.date))) : '') + '</li>';
 }
 function renderQueue(){
   const sec = $('#qSec'), b = $('#btnBatch');
@@ -1896,16 +1908,27 @@ function renderQueue(){
     $('#' + id + 'Box').hidden = !g[k].length;
     $('#' + id + 'Sum').textContent = g[k].length ? cnt(g[k].length) + ' · ≈ ' + lei(sum(g[k], 'val')) : '';
   });
-  const stopAt = g.ready.findIndex(x => !x.e || x.e.why);
-  $('#qReady').innerHTML = g.ready.map((x, i) => qItemHtml(x, 'ready', i === stopAt)).join('');
-  $('#qWait').innerHTML = g.wait.map(x => qItemHtml(x, 'wait', false)).join('');
+  const stopAt = g.ready.findIndex(x => !x.e || x.e.why), ps = new Map(invStatus().map(x => [x.key, x]));
+  $('#qReady').innerHTML = g.ready.map((x, i) => qItemHtml(x, 'ready', i === stopAt, ps)).join('');
+  $('#qWait').innerHTML = g.wait.map(x => qItemHtml(x, 'wait', false, ps)).join('');
   if (!BATCH_RUNNING) b.textContent = 'Emite NIR-urile (' + g.ready.length + ')';
   b.disabled = BATCH_RUNNING || !g.ready.length;
   $('#qReadyNote').textContent = !g.ready.length ? '' : stopAt < 0 ? 'Se emit toate, în ordinea datei. Dacă una are nevoie de tine, lotul se oprește la ea și continuă după ce o rezolvi.' : stopAt === 0 ? 'Prima factură are nevoie de tine: lotul se oprește la ea, o rezolvi, apoi continuă singur.' : (stopAt === 1 ? 'Se emite prima factură' : 'Se emit în ordine primele ' + stopAt) + ', apoi lotul se oprește la cea care are nevoie de tine și continuă după ce o rezolvi.';
   $('#qNote').textContent = (g.wait.length && isoOk(g.wait[0].q.inv.date) ? 'Următoarea zi se închide pe ' + roDate(readyDate(g.wait[0].q.inv.date)) + '. ' : '') +
-    'Valorile sunt estimate cu prețurile de azi; cele finale se stabilesc la emitere. NIR-urile primesc numerele la rând, în ordinea datei facturii.';
+    'Valorile sunt estimate cu prețurile de azi; cele finale se stabilesc la emitere. NIR-urile primesc numerele la rând, în ordinea datei facturii. Plata o poți alege de acum: rămâne pe factură și după ce primește NIR.';
 }
 $('#qSec').addEventListener('click', async e => {
+  const p = e.target.closest('[data-qpay]');
+  if (p) {
+    if (BATCH_RUNNING) return;
+    const x = invStatus().find(y => y.key === p.dataset.key); if (!x) return;
+    if (p.dataset.qpay !== 'undo') { qUndo = null; invAct(x, p.dataset.qpay, true); return; }
+    if (qUndo !== x.key) { qUndo = x.key; renderQueue(); setTimeout(() => { if (qUndo === x.key) { qUndo = null; renderQueue(); } }, 6000); return; }
+    qUndo = null;
+    for (const d0 of [...DAYS.values()]) { const d = getDay(d0.date), keep = d.out.filter(o => !(o.kind === 'inv' && o.key === x.key)); if (keep.length !== d.out.length) { d.out = keep; await putDay(d); } }
+    payChanged(); toast('Am anulat plata facturii ' + x.no + ' (' + (x.sup || 'furnizor') + '). Alege din nou cum ai plătit-o.', 'ok');
+    return;
+  }
   const t = e.target.closest('[data-q]'); if (!t || BATCH_RUNNING) return;
   const q = QUEUE.find(x => x.key === t.dataset.key); if (!q) return;
   if (t.dataset.q === 'open') {
@@ -1922,7 +1945,8 @@ $('#qSec').addEventListener('click', async e => {
   try { await QDB.del(q.key); await QDB.fileDel(q.key); } catch (x) {}
   const resume = S.batch && S.qKey === q.key;   // the batch was stopped at this invoice: carry on without it
   if (S.qKey === q.key) S.qKey = null;
-  render(); toast('Factura ' + invLabel(q.inv) + ' a ieșit din coadă. O poți încărca din nou oricând.', 'ok');
+  const pk = payKey(q.key, q.inv.date), pdays = []; DAYS.forEach(d => { if ((d.out || []).some(o => o.kind === 'inv' && o.key === pk)) pdays.push(d.date); });
+  render(); toast('Factura ' + invLabel(q.inv) + ' a ieșit din coadă. O poți încărca din nou oricând.' + (pdays.length ? ' Plata trecută la ea a rămas în Casă, pe ' + pdays.sort().map(roDate).join(', ') + ': dacă o încarci din nou, se leagă iar de ea; dacă nu mai e valabilă, șterge-o de acolo.' : ''), 'ok');
   if (resume) setTimeout(() => runBatch(), 30);
 });
 // why an invoice cannot be issued without you ('' = it can)
@@ -2720,7 +2744,7 @@ async function issueCore(kind){
     if (S.example) { await downloadModel(M, kind); toast('Exemplul a fost descărcat. Încarcă factura ta pentru un NIR real.', 'ok'); return false; }
     const nr = +S.nirNo, inv = S.inv;
     const rec = {nr, serie: S.serie, date: S.nirDate, issuedAt: new Date().toISOString(), status: 'emis', stornoOf: null, stornoBy: null,
-      invKey: invKey(inv), supName: (inv.supplier && inv.supplier.name) || '', supCui: (inv.supplier && inv.supplier.cui) || '', invNo: inv.number || '', invDate: inv.date || '', invDue: inv.due || '',
+      invKey: invKey(inv), supName: (inv.supplier && inv.supplier.name) || '', supCui: (inv.supplier && inv.supplier.cui) || '', invNo: inv.number || '', invDate: inv.date || '', invDue: inv.due || '', invPay: invPayOf(inv.totals),
       spvIndex: M.inv.spvIndex || '', model: M};
     if (STORE_OK) {
       try { await IDB.add('nir', rec); if (nr > (S.maxNr || 0)) { S.maxNr = nr; saveStore(); } }
@@ -3224,8 +3248,8 @@ function estBook(to){
 const payKey = (k, date) => k + '|' + String(date || '').slice(0, 4);
 function invList(){
   const list = [], seen = new Set();
-  REG.filter(r => !r.stornoOf && r.status === 'emis').forEach(r => { const k = payKey(r.invKey, r.invDate); if (seen.has(k)) return; seen.add(k); list.push({key: k, sup: r.supName || '', no: r.invNo || '', date: r.invDate || '', due: r.invDue || '', total: round2(r.model.refPay != null ? r.model.refPay : r.model.calcPay || 0), src: 'NIR ' + r.nr}); });
-  QUEUE.forEach(q => { const k = payKey(q.key, q.inv.date); if (seen.has(k)) return; seen.add(k); const t = q.inv.totals || {}; list.push({key: k, sup: (q.inv.supplier && q.inv.supplier.name) || '', no: q.inv.number || '', date: q.inv.date || '', due: q.inv.due || '', total: round2(t.payable != null ? t.payable : t.gross || 0), src: 'în coadă', queued: true}); });
+  REG.filter(r => !r.stornoOf && r.status === 'emis').forEach(r => { const k = payKey(r.invKey, r.invDate); if (seen.has(k)) return; seen.add(k); list.push({key: k, sup: r.supName || '', no: r.invNo || '', date: r.invDate || '', due: r.invDue || '', total: round2(r.invPay != null ? r.invPay : r.model.refPay != null ? r.model.refPay : r.model.calcPay || 0), src: 'NIR ' + r.nr}); });
+  QUEUE.forEach(q => { const k = payKey(q.key, q.inv.date); if (seen.has(k)) return; seen.add(k); list.push({key: k, sup: (q.inv.supplier && q.inv.supplier.name) || '', no: q.inv.number || '', date: q.inv.date || '', due: q.inv.due || '', total: invPayOf(q.inv.totals) || 0, src: 'în coadă', queued: true}); });
   return list;
 }
 function payInfo(){ const m = new Map(); DAYS.forEach(d => (d.out || []).forEach(o => { if (o.kind === 'inv' && o.key) { const a = m.get(o.key) || []; a.push(Object.assign({date: d.date}, o)); m.set(o.key, a); } })); return m; }
@@ -3254,6 +3278,7 @@ function showTab(t){
   [['nir', 'paneNir'], ['casa', 'paneCasa'], ['gest', 'paneGest']].forEach(([k, id]) => { $('#' + id).hidden = k !== t; $('#tb-' + k).setAttribute('aria-selected', String(k === t)); });
   if (t === 'casa') renderCasa();
   if (t === 'gest') renderGest();
+  if (t === 'nir') renderQueue();
   if (t !== 'nir') renderCgDir();
   window.scrollTo(0, 0);
 }
@@ -3375,13 +3400,13 @@ function payNote(){
   if (cash && isoOk(date) && startSet() && date < S.start.date) bits.push('E înainte de data de start: nu intră în registru, pentru că e cuprinsă în soldul de pornire.');
   if (isoOk(date) && date > today()) bits.push('Data plății nu poate fi în viitor.');
   $('#cfNote').textContent = bits.join(' ');
-  const ch = [[CF.later ? '' : CF.invDate, 'Pe loc, ziua facturii'], [CDAY, 'Ziua deschisă'], [today(), 'Azi']].filter(([x], i, a) => isoOk(x) && x <= today() && !(CF.later && x === CF.invDate) && a.findIndex(([y]) => y === x) === i);
+  const ch = [[CF.later ? '' : CF.invDate, 'Pe loc, ziua facturii'], [CF.fromQ ? '' : CDAY, 'Ziua deschisă'], [addDays(today(), -1), 'Ieri'], [today(), 'Azi']].filter(([x], i, a) => isoOk(x) && x <= today() && !(CF.later && x === CF.invDate) && a.findIndex(([y]) => y === x) === i);
   $('#cfSave').textContent = cash && isoOk(date) ? 'Salvează: cash, plătită pe ' + dm5(date) : m === 'card' ? 'Salvează: plătită cu cardul' : 'Adaugă';
   $('#cfDateChips').innerHTML = ch.map(([x, t]) => '<button type="button" class="chip' + (x === date ? ' ok' : '') + '" data-cfd="' + x + '">' + t + ' ' + dm5(x) + '</button>').join('');
 }
 // you say how and on which day you paid: the app never guesses a date (not the invoice day, not the due date)
-function openPay(x){
-  openForm('out', 'inv', 'Plata facturii ' + x.no + ' (' + (x.sup || 'furnizor') + ')', 'Plată factura ' + x.no + ' din ' + roDate(x.date) + ', ' + x.sup, x.left, {key: x.key, sup: x.sup, max: x.left, invDate: x.date, invNo: x.no, later: x.later});
+function openPay(x, fromQ){
+  openForm('out', 'inv', 'Plata facturii ' + x.no + ' (' + (x.sup || 'furnizor') + ')', 'Plată factura ' + x.no + ' din ' + roDate(x.date) + ', ' + x.sup, x.left, {key: x.key, sup: x.sup, max: x.left, invDate: x.date, invNo: x.no, later: x.later, fromQ: !!fromQ});
   document.querySelectorAll('input[name="cfMethod"]').forEach(r => { r.checked = false; });
   $('#cfDate').value = ''; payNote();
   setTimeout(() => $('#cfPay').scrollIntoView({block: 'center', behavior: 'smooth'}), 320);
@@ -3390,22 +3415,25 @@ function openPay(x){
 async function spotPay(x, method){
   if (!isoOk(x.date) || x.date > today()) { toast('Factura nu are o dată bună; folosește „Plătesc o factură”.', 'bad'); return; }
   const item = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: 'inv', label: 'Plată factura ' + x.no + ' din ' + roDate(x.date) + ', ' + x.sup, doc: '', amount: x.left, key: x.key, sup: x.sup, invNo: x.no, invDate: x.date, method};
-  const d = getDay(x.date); d.out.push(item); await putDay(d); renderCasa();
-  toast('Factura ' + x.no + ' (' + x.sup + '): plătită la livrare ' + (method === 'card' ? 'cu cardul (nu intră în casă)' : 'cash, intră în registrul de casă') + ', ' + m2(x.left) + ' lei, pe ' + roDate(x.date) + ', ziua facturii. Dacă ai greșit, o ștergi din plățile zilei de ' + roDate(x.date) + '.', 'ok');
+  const d = getDay(x.date); d.out.push(item); await putDay(d); payChanged();
+  toast('Factura ' + x.no + ' (' + x.sup + '): plătită la livrare ' + (method === 'card' ? 'cu cardul (nu intră în casă)' : 'cash, intră în registrul de casă') + ', ' + m2(x.left) + ' lei, pe ' + roDate(x.date) + ', ziua facturii.' + (x.queued ? ' Rămâne așa și după ce factura primește NIR.' : '') + (x.queued ? ' Dacă ai greșit, apeși „Anulează plata” la ea în coadă.' : ' Dacă ai greșit, o ștergi din plățile zilei de ' + roDate(x.date) + '.'), 'ok');
 }
 $('#cfPay').addEventListener('change', payNote);
 $('#cfDate').addEventListener('input', payNote);
 $('#cfDateChips').addEventListener('click', e => { const b = e.target.closest('[data-cfd]'); if (b) { $('#cfDate').value = b.dataset.cfd; payNote(); } });
+const payChanged = () => { renderCasa(); renderQueue(); };
 function invClick(e){
   const b = e.target.closest('[data-dinv]'); if (!b) return;
   const x = invStatus().find(y => y.key === b.dataset.key); if (!x) return;
-  const k = b.dataset.dinv;
-  if (k === 'pay') { openPay(x); return; }
+  invAct(x, b.dataset.dinv, false);
+}
+function invAct(x, k, fromQ){
+  if (k === 'pay') { if (fromQ) showTab('casa'); openPay(x, fromQ); return; }
   if (k === 'spotcash' || k === 'spotcard') { spotPay(x, k === 'spotcard' ? 'card' : 'cash'); return; }
   S.later = Object.assign({}, S.later);
   if (k === 'later') { S.later[x.key] = today(); toast('Factura ' + x.no + ' e „la termen”. Când o plătești, apeși la ea „Am plătit-o” (sau o alegi din „Plătesc o factură”) și scrii tu cum ai plătit și în ce zi.', 'ok'); }
   else { delete S.later[x.key]; toast('Factura ' + x.no + ' nu mai e „la termen”: alege cum ai plătit-o.', 'ok'); }
-  saveStore(); renderCasa();
+  saveStore(); payChanged();
 }
 $('#dayInvList').addEventListener('click', invClick);
 $('#openInvList').addEventListener('click', invClick);
@@ -3428,7 +3456,8 @@ $('#btnPayBank').addEventListener('click', () => openForm('out', 'bank', 'Depune
 $('#btnPayOther').addEventListener('click', () => openForm('out', 'other', 'Altă plată în numerar', '', null));
 $('#btnInBank').addEventListener('click', () => openForm('inn', 'bank', 'Ridicare numerar din bancă', 'Ridicare numerar din bancă', null));
 $('#btnInOther').addEventListener('click', () => openForm('inn', 'other', 'Altă încasare în numerar', '', null));
-$('#cfCancel').addEventListener('click', () => { CF = null; $('#cForm').hidden = true; });
+function backToQueue(){ showTab('nir'); setTimeout(() => $('#qSec').scrollIntoView({block: 'start', behavior: 'smooth'}), 60); }
+$('#cfCancel').addEventListener('click', () => { const back = CF && CF.fromQ; CF = null; $('#cForm').hidden = true; if (back) backToQueue(); });
 $('#cfSave').addEventListener('click', async () => {
   if (!CF) return;
   const label = $('#cfLabel').value.trim(), doc = $('#cfDoc').value.trim(), amt = leiNum($('#cfAmt').value);
@@ -3445,9 +3474,10 @@ $('#cfSave').addEventListener('click', async () => {
   if (CF.kind === 'inv' && amt > CF.max + 0.004) { toast('Suma e mai mare decât restul de plată al facturii (' + m2(CF.max) + ' lei).', 'bad'); return; }
   const item = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: CF.kind, label, doc, amount: round2(amt)};
   if (CF.kind === 'inv') Object.assign(item, {key: CF.key, sup: CF.sup, invNo: CF.invNo, invDate: CF.invDate, method});
-  const mode = CF.mode; CF = null; $('#cForm').hidden = true;
-  const d = getDay(date); (mode === 'out' ? d.out : d.inn).push(item); await putDay(d); renderCasa();
-  const where = date === CDAY ? '' : ' (nu în ziua deschisă acum, ' + roDate(CDAY) + ')';
+  const mode = CF.mode, back = CF.fromQ; CF = null; $('#cForm').hidden = true;
+  const d = getDay(date); (mode === 'out' ? d.out : d.inn).push(item); await putDay(d); payChanged();
+  if (back) backToQueue();
+  const where = date === CDAY || back ? '' : ' (nu în ziua deschisă acum, ' + roDate(CDAY) + ')';
   if (method === 'card') toast('Factura ' + item.invNo + ' e marcată plătită cu card/transfer: ' + m2(item.amount) + ' lei pe ' + roDate(date) + '. Nu intră în registrul de casă.', 'ok');
   else toast((mode === 'out' ? 'Plata' : 'Încasarea') + ' de ' + m2(item.amount) + ' lei a intrat în registrul de casă pe ' + roDate(date) + where + '.' + '', 'ok');
 });
@@ -3702,7 +3732,7 @@ document.addEventListener('click', async e => {
   catch (x) { if (x && x.name === 'AbortError') return; toast('Dosarul nu a putut fi ales. Fișierele merg în continuare în Descărcări.', 'bad'); }
 });
 DIR.load().then(renderCgDir).catch(() => {});
-loadDays().then(() => { renderCasa(); renderGest(); });
+loadDays().then(() => { renderCasa(); renderGest(); renderQueue(); });
 
 /* ---------------- runtime capabilities (only inside Claude) ---------------- */
 if (window.claude && typeof window.claude.use === 'function') {
