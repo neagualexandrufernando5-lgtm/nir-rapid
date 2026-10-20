@@ -447,11 +447,12 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
   <section class="tabpane" id="paneCasa" aria-label="Registru de casă" hidden>
     <div class="card" id="cStartWarn" hidden>
       <h3>Întâi soldurile de pornire</h3>
-      <p class="reg-note">Registrul de casă pornește de la numerarul din casă la o dată de start. Le pui o singură dată la „Gestiune” → „Solduri de pornire”.</p>
-      <div class="reg-actions"><button class="btn primary" type="button" data-goto="gest">Pune soldurile de pornire</button></div>
+      <p class="reg-note">Registrul de casă pornește de la numerarul din casă la o dată de start, iar gestiunea de la valoarea mărfii din magazin (la preț de vânzare, cu TVA). Le pui la „Gestiune” → „Solduri de pornire” și le poți schimba oricând.</p>
+      <div class="reg-actions"><button class="btn primary" type="button" data-goto="gest" data-open="1">Pune soldurile de pornire</button></div>
     </div>
     <div class="day-nav"><button class="btn" id="dPrev" type="button" aria-label="Ziua dinainte">‹</button><input type="date" id="dDate" aria-label="Ziua"><button class="btn" id="dNext" type="button" aria-label="Ziua următoare">›</button><button class="btn" id="dToday" type="button">Azi</button></div>
     <p class="c-info" id="cHead"></p>
+    <div class="chips" id="cStart" hidden><span class="c-info" id="cStartTxt"></span><button type="button" class="chip" data-goto="gest" data-open="1">Schimbă soldurile de pornire</button></div>
     <div class="chips" id="cEst" hidden><span class="c-info" id="cEstTxt"></span><button type="button" class="chip" data-goto="gest">Zi de zi</button></div>
     <div class="chips" id="cLater" hidden><span class="c-info" id="cLaterTxt"></span><button type="button" class="chip" id="cLaterBtn">Le-am plătit? Alege</button></div>
     <div class="chips" id="cMissing"></div>
@@ -466,7 +467,7 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
         <label class="f">Nr. raport Z<input type="text" id="zNo" inputmode="numeric" autocomplete="off"></label>
         <label class="f">Numerar (cash)<input type="text" id="zCash" inputmode="decimal" autocomplete="off" placeholder="ex. 1.250,50"></label>
         <label class="f">Card<input type="text" id="zCard" inputmode="decimal" autocomplete="off" placeholder="ex. 830,00"></label>
-        <label class="f">Garanții SGR (lei)<input type="text" id="zSgr" inputmode="decimal" autocomplete="off" placeholder="ex. 57,00"></label>
+        <label class="f">Ambalaj returnabil, SGR (lei)<input type="text" id="zSgr" inputmode="decimal" autocomplete="off" placeholder="ex. 57,00"></label>
       </div>
       <label class="tog"><input type="checkbox" id="zClosed"><span>Magazin închis în ziua asta (fără vânzări)</span></label>
       <p class="reg-note" id="zNote"></p>
@@ -519,6 +520,16 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
   </section>
 
   <section class="tabpane" id="paneGest" aria-label="Gestiune" hidden>
+    <details class="card" id="gStart">
+      <summary><b>Solduri de pornire: marfa din magazin și casa</b> <span id="gStartSum"></span></summary>
+      <div class="grid3">
+        <label class="f">Data de start<input type="date" id="stDate"></label>
+        <label class="f">Marfa din magazin, la preț de vânzare cu TVA, la începutul zilei<input type="text" id="stStock" inputmode="decimal" autocomplete="off"></label>
+        <label class="f">Numerar în casă (registrul de casă), la începutul zilei<input type="text" id="stCash" inputmode="decimal" autocomplete="off"></label>
+      </div>
+      <p class="reg-note">Le iei de la contabilă: soldul mărfii la preț de vânzare (contul 371) și al casei (contul 5311) la sfârșitul zilei dinaintea datei de start. Le poți schimba oricând, și mai târziu, dacă ai greșit: tot ce urmează se recalculează singur. Dacă ai dat deja PDF-uri contabilei, aplicația îți arată zilele care s-au schimbat, ca să le scoți din nou.</p>
+      <label class="tog"><input type="checkbox" id="stSun"><span>Duminica magazinul e închis (implicit). O duminică în care ai lucrat o deschizi la Casă, scriind vânzările.</span></label>
+    </details>
     <div class="card" id="eBox">
       <h3>Zi de zi: casa și marfa (informativ)</h3>
       <p class="reg-note">Cifre de lucru, nu documente: casa din vânzările și plățile introduse, marfa la preț de vânzare din NIR-urile făcute plus facturile din coadă, cu valoarea estimată a NIR-ului lor, ca și cum n-ar mai veni alte facturi. Registrul de casă și raportul de gestiune se fac tot doar după ce ziua se închide.</p>
@@ -526,15 +537,6 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
       <div class="c-list" id="eList"></div>
       <div class="reg-actions"><button class="btn" id="eMore" type="button" hidden>Arată toate zilele</button></div>
     </div>
-    <details class="card" id="gStart">
-      <summary><b>Solduri de pornire</b> <span id="gStartSum"></span></summary>
-      <div class="grid3">
-        <label class="f">Data de start<input type="date" id="stDate"></label>
-        <label class="f">Marfă la preț de vânzare cu TVA, la începutul zilei<input type="text" id="stStock" inputmode="decimal" autocomplete="off"></label>
-        <label class="f">Numerar în casă, la începutul zilei<input type="text" id="stCash" inputmode="decimal" autocomplete="off"></label>
-      </div>
-      <p class="reg-note">Le iei de la contabilă: soldul mărfii la preț de vânzare (contul 371) și al casei (contul 5311) la sfârșitul zilei dinaintea datei de start. Le poți schimba oricând; tot ce urmează se recalculează.</p>
-    </details>
     <details class="card" id="gPv">
       <summary><b>Modificări de preț la marfa din raft</b> <span class="c-info">(opțional, cu proces-verbal)</span></summary>
       <p class="reg-note">Doar când schimbi prețul de vânzare al unei mărfi care era deja în magazin. Scrii diferența totală: (preț nou − preț vechi) × bucățile rămase. Plus la scumpire, minus la ieftinire. Fără ea, gestiunea scriptică nu se mai potrivește cu inventarul.</p>
@@ -641,7 +643,7 @@ const S = {
   pct: typeof saved.pct === 'number' ? saved.pct : 20,
   step: STEPS.includes(saved.step) ? saved.step : 0.1,
   risePct: typeof saved.risePct === 'number' ? saved.risePct : 5,
-  dateRule: saved.dateRule === 'emit' ? 'emit' : 'inv', batch: false, qKey: null, attach: saved.attach !== false, srcFrom: isoOk(saved.srcFrom) ? saved.srcFrom : '', srcLast: saved.srcLast || '', lastImport: saved.lastImport || '', start: saved.start && isoOk(saved.start.date) ? saved.start : null, later: saved.later && typeof saved.later === 'object' ? saved.later : {},
+  dateRule: saved.dateRule === 'emit' ? 'emit' : 'inv', batch: false, qKey: null, attach: saved.attach !== false, srcFrom: isoOk(saved.srcFrom) ? saved.srcFrom : '', srcLast: saved.srcLast || '', lastImport: saved.lastImport || '', start: saved.start && isoOk(saved.start.date) ? saved.start : null, later: saved.later && typeof saved.later === 'object' ? saved.later : {}, sunOpen: saved.sunOpen === true,
   overrides: saved.overrides && typeof saved.overrides === 'object' ? saved.overrides : {},
   nextNir: Number.isInteger(saved.nextNir) && saved.nextNir > 0 ? saved.nextNir : 1,
   serie: saved.serie || '', unitName: saved.unitName || '', unitCui: saved.unitCui || '', unitReg: saved.unitReg || '', gest: saved.gest || '',
@@ -660,7 +662,7 @@ function saveStore(){
   try { localStorage.setItem(STORE, JSON.stringify(settingsBlob())); } catch (e) {}
 }
 function settingsBlob(){
-  return {pct:S.pct, step:S.step, risePct:S.risePct, dateRule:S.dateRule, attach:S.attach, srcFrom:S.srcFrom, srcLast:S.srcLast, lastImport:S.lastImport, start:S.start, later:S.later, overrides:S.overrides, nextNir:S.startNr, serie:S.serie, company:S.company, gest:S.gest, com:S.com, gestionar:S.gestionar, repEmail:S.repEmail, lastReport:S.lastReport, repBackup:S.repBackup, maxNr:S.maxNr, sent:S.sent};
+  return {pct:S.pct, step:S.step, risePct:S.risePct, dateRule:S.dateRule, attach:S.attach, srcFrom:S.srcFrom, srcLast:S.srcLast, lastImport:S.lastImport, start:S.start, later:S.later, sunOpen:S.sunOpen, overrides:S.overrides, nextNir:S.startNr, serie:S.serie, company:S.company, gest:S.gest, com:S.com, gestionar:S.gestionar, repEmail:S.repEmail, lastReport:S.lastReport, repBackup:S.repBackup, maxNr:S.maxNr, sent:S.sent};
 }
 
 /* ---------------- ZIP read (SPV archive) ---------------- */
@@ -1917,18 +1919,19 @@ function renderQueue(){
   $('#qNote').textContent = (g.wait.length && isoOk(g.wait[0].q.inv.date) ? 'Următoarea zi se închide pe ' + roDate(readyDate(g.wait[0].q.inv.date)) + '. ' : '') +
     'Valorile sunt estimate cu prețurile de azi; cele finale se stabilesc la emitere. NIR-urile primesc numerele la rând, în ordinea datei facturii. Plata o poți alege de acum: rămâne pe factură și după ce primește NIR.';
 }
+// payment buttons on an invoice, in the queue ('q') or in the NIR register ('reg'): the same choice as in Casă
+async function payBtn(p, from){
+  if (BATCH_RUNNING) return;
+  const x = invStatus().find(y => y.key === p.dataset.key); if (!x) return;
+  if (p.dataset.qpay !== 'undo') { qUndo = null; invAct(x, p.dataset.qpay, from); return; }
+  if (qUndo !== x.key) { qUndo = x.key; payChanged(); setTimeout(() => { if (qUndo === x.key) { qUndo = null; payChanged(); } }, 6000); return; }
+  qUndo = null;
+  for (const d0 of [...DAYS.values()]) { const d = getDay(d0.date), keep = d.out.filter(o => !(o.kind === 'inv' && o.key === x.key)); if (keep.length !== d.out.length) { d.out = keep; await putDay(d); } }
+  payChanged(); toast('Am anulat plata facturii ' + x.no + ' (' + (x.sup || 'furnizor') + '). Alege din nou cum ai plătit-o.', 'ok');
+}
 $('#qSec').addEventListener('click', async e => {
   const p = e.target.closest('[data-qpay]');
-  if (p) {
-    if (BATCH_RUNNING) return;
-    const x = invStatus().find(y => y.key === p.dataset.key); if (!x) return;
-    if (p.dataset.qpay !== 'undo') { qUndo = null; invAct(x, p.dataset.qpay, true); return; }
-    if (qUndo !== x.key) { qUndo = x.key; renderQueue(); setTimeout(() => { if (qUndo === x.key) { qUndo = null; renderQueue(); } }, 6000); return; }
-    qUndo = null;
-    for (const d0 of [...DAYS.values()]) { const d = getDay(d0.date), keep = d.out.filter(o => !(o.kind === 'inv' && o.key === x.key)); if (keep.length !== d.out.length) { d.out = keep; await putDay(d); } }
-    payChanged(); toast('Am anulat plata facturii ' + x.no + ' (' + (x.sup || 'furnizor') + '). Alege din nou cum ai plătit-o.', 'ok');
-    return;
-  }
+  if (p) { await payBtn(p, 'q'); return; }
   const t = e.target.closest('[data-q]'); if (!t || BATCH_RUNNING) return;
   const q = QUEUE.find(x => x.key === t.dataset.key); if (!q) return;
   if (t.dataset.q === 'open') {
@@ -2792,16 +2795,19 @@ function renderRegister(){
   const box = $('#regList'), last = lastReg();
   $('#regSum').textContent = REG.length ? REG.length + ' NIR-uri · ultimul nr. ' + last.nr + ' din ' + roDate(last.date) : (STORE_OK ? 'gol · primul NIR primește nr. ' + nextNr() : 'browserul nu permite salvarea');
   if (!REG.length) { box.innerHTML = '<li class="empty">' + (STORE_OK ? 'Niciun NIR emis încă. Fiecare NIR emis apare aici și nu mai poate fi șters, doar stornat.' : 'Acest browser nu permite păstrarea registrului (mod privat sau date blocate). Deschide programul într-o fereastră normală.') + '</li>'; return; }
+  const ps = new Map(invStatus().map(x => [x.key, x])), st0 = startSet() ? S.start.date : '';
   box.innerHTML = REG.slice().reverse().map(r => {
+    const px = r.status === 'emis' && !r.stornoOf ? ps.get(payKey(r.invKey, r.invDate)) : null, payLine = px && (!st0 || px.date >= st0 || px.later || px.pays.length) ? qPayHtml(px) : '';
     const st = r.stornoOf ? '<span class="chip">Storno la NIR ' + r.stornoOf + '</span>' : r.status === 'stornat' ? '<span class="chip bad">Stornat prin NIR ' + r.stornoBy + '</span>' : '';
     const canStorno = r.status === 'emis' && !r.stornoOf;
     return '<li class="reg-item"><span><b>NIR ' + esc((r.serie ? r.serie + ' ' : '') + r.nr) + '</b> · ' + roDate(r.date) + ' · ' + esc(r.supName) + '</span>' +
       '<span class="reg-btns"><button type="button" class="chip std" data-reg="pdf" data-nr="' + r.nr + '">PDF</button><button type="button" class="chip std" data-reg="xlsx" data-nr="' + r.nr + '">Excel</button>' +
       (canStorno ? '<button type="button" class="chip' + (stornoArm === r.nr ? ' bad' : '') + '" data-reg="storno" data-nr="' + r.nr + '">' + (stornoArm === r.nr ? 'Confirm storno NIR ' + r.nr : 'Stornează') + '</button>' : '') + '</span>' +
-      '<span class="l-sub">fact. ' + esc(r.invNo) + ' din ' + roDate(r.invDate) + ' · ' + lei(r.model.totals.val) + ' la vânzare ' + st + '</span></li>';
+      '<span class="l-sub">fact. ' + esc(r.invNo) + ' din ' + roDate(r.invDate) + ' · ' + lei(r.model.totals.val) + ' la vânzare ' + st + '</span>' + payLine + '</li>';
   }).join('');
 }
 $('#regList').addEventListener('click', async e => {
+  const p = e.target.closest('[data-qpay]'); if (p) { await payBtn(p, 'reg'); return; }
   const t = e.target.closest('[data-reg]'); if (!t) return;
   const rec = REG.find(r => r.nr === +t.dataset.nr); if (!rec) return;
   if (t.dataset.reg === 'pdf' || t.dataset.reg === 'xlsx') { try { await downloadModel(rec.model, t.dataset.reg, rec.stornoOf ? null : rec.invKey); toast('NIR nr. ' + rec.nr + ' descărcat din registru.' + ATTACH_NOTE, 'ok'); } catch (err) { saveErr(err, t.dataset.reg === 'pdf' ? 'PDF' : 'Excel'); } return; }
@@ -2875,12 +2881,14 @@ $('#fileRestore').addEventListener('change', async e => {
     if (!S.repEmail && st.repEmail) S.repEmail = st.repEmail;
     if (!S.start && st.start && isoOk(st.start.date)) S.start = st.start;
     if (st.later && typeof st.later === 'object') S.later = Object.assign({}, st.later, S.later);
+    if (st.sunOpen === true) S.sunOpen = true;
     let daysIn = 0;
     for (const d of Array.isArray(data.days) ? data.days : []) {
       if (!d || !isoOk(d.date)) continue;
       const have = DAYS.get(d.date);
       if (!have || (have.updatedAt || '') < (d.updatedAt || '')) { DAYS.set(d.date, d); try { await DDB.put(d); } catch (x) {} daysIn++; }
     }
+    if (daysIn) await renumberZ();
     if ((st.lastReport || '') > (S.lastReport || '')) S.lastReport = st.lastReport;
     if (st.sent && typeof st.sent === 'object') for (const k in st.sent) if (!S.sent[k]) S.sent[k] = st.sent[k];
     const top = REG.length ? REG[REG.length - 1].nr : 0;
@@ -3163,12 +3171,21 @@ const CG_DIR = 'Casă și gestiune';
 let DAYS = new Map(), DAY_OK = true, CDAY = today(), CF = null, cArm = null, gAll = false;
 async function loadDays(){ try { (await DDB.all() || []).forEach(d => { if (d && isoOk(d.date)) DAYS.set(d.date, d); }); } catch (e) { DAY_OK = false; } }
 const blankDay = date => ({date, cash: null, card: null, sgr: null, closed: false, inn: [], out: [], pv: [], counted: null});
-function getDay(date){ return Object.assign(blankDay(date), DAYS.get(date) || {}); }
+// Sunday is closed by default (setting), unless you opened that day or typed its sales; autoClosed marks the default
+const sunDef = (date, raw) => !S.sunOpen && new Date(date + 'T00:00:00Z').getUTCDay() === 0 && !raw.open && raw.cash == null && raw.card == null && raw.sgr == null && !raw.zNo;
+function getDay(date){
+  const raw = DAYS.get(date) || {}, d = Object.assign(blankDay(date), raw);
+  if (!raw.closed || raw.autoClosed) { const a = sunDef(date, raw); d.closed = a; d.autoClosed = a; }
+  return d;
+}
 async function putDay(d){ d.updatedAt = new Date().toISOString(); DAYS.set(d.date, d); try { await DDB.put(d); } catch (e) { DAY_OK = false; toast('Ziua nu a putut fi salvată în telefon. Verifică spațiul liber.', 'bad'); } }
 const sumAmt = list => round2((list || []).reduce((s, x) => s + (x.amount || 0), 0));
 const startSet = () => !!(S.start && isoOk(S.start.date));
 function eachDate(from, to, fn){ for (let d = from; d <= to; d = addDays(d, 1)) fn(d); }
 function salesIn(d){ return !!d.closed || (d.cash != null && d.card != null && d.sgr != null); }
+// the returnable-packaging deposit is part of the receipts, so it can never be more than cash + card
+const sgrBad = d => !d.closed && d.cash != null && d.card != null && d.sgr != null && round2(d.sgr || 0) > round2((d.cash || 0) + (d.card || 0)) + 0.004;
+const sgrBadTxt = d => 'ambalajul returnabil din raportul Z (' + m2(d.sgr) + ' lei) e mai mare decât vânzările (' + m2((d.cash || 0) + (d.card || 0)) + ' lei): verifică cifrele';
 function salesOut(d){ return d.closed ? 0 : round2((d.cash || 0) + (d.card || 0) - (d.sgr || 0)); }
 const WD = ['du', 'lu', 'ma', 'mi', 'jo', 'vi', 'sâ'];
 const wday = iso => WD[new Date(iso + 'T00:00:00Z').getUTCDay()];
@@ -3192,6 +3209,7 @@ function cashBook(to){
 // a cash day is final once every invoice of that day is in the app and has its payment chosen: a cash payment at delivery may still be missing until then
 function cashGap(date, d, qDates, open){
   if (!salesIn(d)) return date > today() ? 'ziua nu a trecut' : 'lipsesc vânzările din raportul Z';
+  if (sgrBad(d)) return sgrBadTxt(d);
   if (!dayClosed(date)) return 'facturile acestei zile pot apărea în SPV până pe ' + roDate(spvDeadline(date)) + ' și poate lipsi încă o plată la livrare; ziua se închide pe ' + roDate(readyDate(date));
   const q = qDates.get(date) || 0;
   if (q) return (q > 1 ? q + ' facturi din ziua asta sunt' : 'o factură din ziua asta e') + ' încă în coadă, fără NIR';
@@ -3206,6 +3224,7 @@ function nirDay(date){ return REG.filter(r => r.date === date).sort((a, b) => a.
 function dayGap(date, qDates){
   const d = getDay(date);
   if (!salesIn(d)) return date > today() ? 'ziua nu a trecut' : 'lipsesc vânzările din raportul Z';
+  if (sgrBad(d)) return sgrBadTxt(d);
   if (S.dateRule !== 'emit') {
     if (!dayClosed(date)) return 'facturile acestei zile pot apărea în SPV până pe ' + roDate(spvDeadline(date)) + '; ziua se închide pe ' + roDate(readyDate(date));
     const q = qDates ? qDates.get(date) || 0 : QUEUE.filter(x => x.inv.date === date).length;
@@ -3268,7 +3287,8 @@ function gestSig(date, g){ return sigOf([g && g.prev, g && g.fin, g && g.nir, g 
 // a closed shop with no cash moved has no page in the cash book; pages are numbered over the days that have one
 const hasMove = d => !d.closed || d.inn.length > 0 || d.out.some(isCash);
 // one report number per day since the start date; a report for a period carries the number of its last day
-function gestNo(date){ return startSet() ? Math.round((Date.parse(date) - Date.parse(S.start.date)) / 864e5) + 1 : 1; }
+function gestDays(){ const nd = new Set(REG.map(r => r.date)); return date => { const d = getDay(date); return !d.closed || nd.has(date) || (d.pv || []).length > 0; }; }
+function gestNo(date){ if (!startSet()) return 1; const has = gestDays(); let n = 0; eachDate(S.start.date, date, x => { if (has(x)) n++; }); return Math.max(n, 1); }
 function movesBefore(date){ let n = 0; if (startSet() && date > S.start.date) eachDate(S.start.date, addDays(date, -1), x => { if (hasMove(getDay(x))) n++; }); return n; }
 
 /* ---- tabs ---- */
@@ -3278,12 +3298,12 @@ function showTab(t){
   [['nir', 'paneNir'], ['casa', 'paneCasa'], ['gest', 'paneGest']].forEach(([k, id]) => { $('#' + id).hidden = k !== t; $('#tb-' + k).setAttribute('aria-selected', String(k === t)); });
   if (t === 'casa') renderCasa();
   if (t === 'gest') renderGest();
-  if (t === 'nir') renderQueue();
+  if (t === 'nir') { renderQueue(); renderRegister(); }
   if (t !== 'nir') renderCgDir();
   window.scrollTo(0, 0);
 }
 $('.tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
-document.addEventListener('click', e => { const b = e.target.closest('[data-goto]'); if (b) { showTab(b.dataset.goto); if (b.dataset.goto === 'gest') $('#gStart').open = true; } });
+document.addEventListener('click', e => { const b = e.target.closest('[data-goto]'); if (b) { showTab(b.dataset.goto); if (b.dataset.goto === 'gest' && (b.dataset.open || !startSet())) { $('#gStart').open = true; } } });
 
 /* ---- Casă ---- */
 const fmtIn = v => v == null ? '' : String(v).replace('.', ',');
@@ -3293,14 +3313,19 @@ function renderCasa(){
   if ($('#paneCasa').hidden) return;
   const D = CDAY, d = getDay(D), ok = startSet(), act = document.activeElement;
   $('#cStartWarn').hidden = ok;
+  $('#cStart').hidden = !ok;
+  if (ok) $('#cStartTxt').textContent = 'Solduri de pornire, din ' + roDate(S.start.date) + ': marfă ' + m2(S.start.stock || 0) + ' lei, casă ' + m2(S.start.cash || 0) + ' lei.';
   if ($('#dDate') !== act) $('#dDate').value = D;
   [['zCash', d.cash], ['zCard', d.card], ['zSgr', d.sgr], ['cCounted', d.counted]].forEach(([id, v]) => { if ($('#' + id) !== act) $('#' + id).value = fmtIn(v); });
   if ($('#zNo') !== act) $('#zNo').value = d.zNo || '';
-  ['zNo', 'zCash', 'zCard', 'zSgr'].forEach(id => { $('#' + id).disabled = !!d.closed; });
+  const zBefore = [...DAYS.values()].some(x => x.date < D && x.zNo);
+  $('#zNo').placeholder = d.closed ? '' : zBefore ? 'se pune singur după vânzări' : 'primul îl scrii tu';
+  ['zNo', 'zCash', 'zCard', 'zSgr'].forEach(id => { $('#' + id).disabled = !!d.closed && !d.autoClosed; });
   $('#zClosed').checked = !!d.closed;
-  const miss = [d.cash == null && 'numerar', d.card == null && 'card', d.sgr == null && 'garanții SGR (scrie 0 dacă n-ai)'].filter(Boolean);
-  $('#zNote').textContent = d.closed ? 'Zi fără vânzări: în casă și în gestiune nu intră nimic din vânzări.' :
-    (d.sgr ? 'Garanții SGR: ' + m2(d.sgr) + ' lei = ' + Math.round(d.sgr / 0.5) + ' ambalaje. ' : '') + 'Numerarul intră în registrul de casă (include și garanțiile plătite cash). Cardul nu intră în casă. Garanțiile SGR se scad din vânzări doar la gestiune, pentru că nu au intrat pe NIR.' + (miss.length ? ' Lipsesc: ' + miss.join(', ') + '.' : '');
+  const miss = [d.cash == null && 'numerar', d.card == null && 'card', d.sgr == null && 'ambalaj returnabil (scrie 0 dacă n-ai)'].filter(Boolean);
+  $('#zNote').textContent = d.autoClosed ? 'Duminică: magazinul e închis implicit. Nu intră vânzări și nu se consumă număr de raport Z, de raport de gestiune sau filă de registru de casă. Dacă ai fost deschis, scrie vânzările (ziua se deschide singură) sau debifează „Magazin închis”.' :
+    d.closed ? 'Zi fără vânzări: în casă și în gestiune nu intră nimic din vânzări.' :
+    (d.zAuto && d.zNo ? 'Nr. raport Z completat singur, în continuarea zilei precedente: ' + d.zNo + '. Dacă pe raport e altul, scrie-l tu; zilele următoare se refac singure. ' : '') + (sgrBad(d) ? 'Atenție: ' + sgrBadTxt(d) + '. ' : '') + (d.sgr ? 'Ambalaj returnabil (garanții SGR): ' + m2(d.sgr) + ' lei = ' + Math.round(d.sgr / 0.5) + ' ambalaje. ' + (Math.abs(d.sgr / 0.5 - Math.round(d.sgr / 0.5)) > 0.001 ? 'Atenție: suma nu e multiplu de 0,50 lei; verifică-o pe raportul Z. ' : '') : '') + 'Numerarul intră în registrul de casă (include și garanțiile plătite cash). Cardul nu intră în casă. Ambalajul returnabil (garanțiile SGR) se scade din vânzări doar la gestiune, pentru că nu a intrat pe NIR.' + (miss.length ? ' Lipsesc: ' + miss.join(', ') + '.' : '');
   const st = invStatus(), known = new Set(st.map(x => x.key));
   // invoices dated this day: choose how each one was paid
   const mine = st.filter(x => x.date === D).sort((a, b) => a.sup.localeCompare(b.sup));
@@ -3373,14 +3398,30 @@ $('#dNext').addEventListener('click', () => setDay(addDays(CDAY, 1)));
 $('#dToday').addEventListener('click', () => setDay(today()));
 $('#dDate').addEventListener('change', e => setDay(e.target.value));
 $('#cMissing').addEventListener('click', e => { const b = e.target.closest('[data-cday]'); if (b) setDay(b.dataset.cday); });
-async function editDay(fn){ const d = getDay(CDAY); fn(d); await putDay(d); renderCasa(); }
+// Z report numbers: you type the first one; every later open day with its sales entered gets the previous number + 1 (0576 -> 0577, zeros kept)
+// a day you typed yourself is a fixed point; a printed day is never touched; a closed day or an unentered day in between breaks the chain
+function zNext(no){ const m = /^(.*?)(\d{1,15})$/.exec(String(no || '').trim()); return m ? m[1] + String(+m[2] + 1).padStart(m[2].length, '0') : ''; }
+async function renumberZ(){
+  const ds = [...DAYS.keys()].filter(isoOk).sort(); if (!ds.length) return; let cur = '';
+  for (let date = ds[0]; date <= ds[ds.length - 1]; date = addDays(date, 1)) {
+    if (!DAYS.has(date)) { if (!getDay(date).closed) cur = ''; continue; }   // never entered: nobody knows if it had a report (a closed Sunday had none)
+    const d = getDay(date); let ch = false;
+    const manual = !!d.zNo && !d.zAuto, frozen = !!d.zNo && !!(d.cashSig || d.gestSig);
+    if (d.closed) { if (d.zAuto && d.zNo) { d.zNo = ''; d.zAuto = false; ch = true; } }
+    else if (manual || frozen) cur = d.zNo;
+    else if (cur && salesIn(d)) { const nx = zNext(cur); if (nx && (d.zNo !== nx || !d.zAuto)) { d.zNo = nx; d.zAuto = true; ch = true; } cur = nx; }
+    else { if (d.zAuto && d.zNo) { d.zNo = ''; d.zAuto = false; ch = true; } cur = ''; }
+    if (ch) await putDay(d);
+  }
+}
+async function editDay(fn){ const d = getDay(CDAY); fn(d); await putDay(d); await renumberZ(); renderCasa(); }
 [['zCash', 'cash'], ['zCard', 'card'], ['zSgr', 'sgr'], ['cCounted', 'counted']].forEach(([id, k]) => $('#' + id).addEventListener('change', e => {
   const v = leiNum(e.target.value);
   if (v != null && v < 0) { toast('Suma nu poate fi negativă.', 'bad'); renderCasa(); return; }
-  editDay(d => { d[k] = v == null ? null : round2(v); });
+  editDay(d => { d[k] = v == null ? null : round2(v); if (d.autoClosed && v != null && k !== 'counted') { d.closed = false; d.autoClosed = false; d.open = true; } });
 }));
-$('#zNo').addEventListener('change', e => editDay(d => { d.zNo = e.target.value.trim(); }));
-$('#zClosed').addEventListener('change', e => editDay(d => { d.closed = e.target.checked; if (d.closed) { d.cash = d.cash || 0; d.card = d.card || 0; d.sgr = d.sgr || 0; } }));
+$('#zNo').addEventListener('change', e => editDay(d => { d.zNo = e.target.value.trim(); d.zAuto = false; if (d.autoClosed && d.zNo) { d.closed = false; d.autoClosed = false; d.open = true; } }));
+$('#zClosed').addEventListener('change', e => editDay(d => { d.closed = e.target.checked; d.autoClosed = false; d.open = !d.closed; if (d.closed) { d.cash = d.cash || 0; d.card = d.card || 0; d.sgr = d.sgr || 0; d.zNo = ''; d.zAuto = false; } }));
 function openForm(mode, kind, title, label, amount, extra){
   CF = Object.assign({mode, kind}, extra || {});
   $('#cfTitle').textContent = title; $('#cfLabel').value = label || ''; $('#cfDoc').value = ''; $('#cfAmt').value = amount != null ? fmtIn(amount) : '';
@@ -3406,7 +3447,7 @@ function payNote(){
 }
 // you say how and on which day you paid: the app never guesses a date (not the invoice day, not the due date)
 function openPay(x, fromQ){
-  openForm('out', 'inv', 'Plata facturii ' + x.no + ' (' + (x.sup || 'furnizor') + ')', 'Plată factura ' + x.no + ' din ' + roDate(x.date) + ', ' + x.sup, x.left, {key: x.key, sup: x.sup, max: x.left, invDate: x.date, invNo: x.no, later: x.later, fromQ: !!fromQ});
+  openForm('out', 'inv', 'Plata facturii ' + x.no + ' (' + (x.sup || 'furnizor') + ')', 'Plată factura ' + x.no + ' din ' + roDate(x.date) + ', ' + x.sup, x.left, {key: x.key, sup: x.sup, max: x.left, invDate: x.date, invNo: x.no, later: x.later, fromQ: fromQ || ''});
   document.querySelectorAll('input[name="cfMethod"]').forEach(r => { r.checked = false; });
   $('#cfDate').value = ''; payNote();
   setTimeout(() => $('#cfPay').scrollIntoView({block: 'center', behavior: 'smooth'}), 320);
@@ -3416,12 +3457,12 @@ async function spotPay(x, method){
   if (!isoOk(x.date) || x.date > today()) { toast('Factura nu are o dată bună; folosește „Plătesc o factură”.', 'bad'); return; }
   const item = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: 'inv', label: 'Plată factura ' + x.no + ' din ' + roDate(x.date) + ', ' + x.sup, doc: '', amount: x.left, key: x.key, sup: x.sup, invNo: x.no, invDate: x.date, method};
   const d = getDay(x.date); d.out.push(item); await putDay(d); payChanged();
-  toast('Factura ' + x.no + ' (' + x.sup + '): plătită la livrare ' + (method === 'card' ? 'cu cardul (nu intră în casă)' : 'cash, intră în registrul de casă') + ', ' + m2(x.left) + ' lei, pe ' + roDate(x.date) + ', ziua facturii.' + (x.queued ? ' Rămâne așa și după ce factura primește NIR.' : '') + (x.queued ? ' Dacă ai greșit, apeși „Anulează plata” la ea în coadă.' : ' Dacă ai greșit, o ștergi din plățile zilei de ' + roDate(x.date) + '.'), 'ok');
+  toast('Factura ' + x.no + ' (' + x.sup + '): plătită la livrare ' + (method === 'card' ? 'cu cardul (nu intră în casă)' : 'cash, intră în registrul de casă') + ', ' + m2(x.left) + ' lei, pe ' + roDate(x.date) + ', ziua facturii.' + (x.queued ? ' Rămâne așa și după ce factura primește NIR.' : '') + ' Dacă ai greșit, apeși „Anulează plata” la ea, în tabul NIR (' + (x.queued ? 'în coadă' : 'în lista NIR-urilor') + '), sau o ștergi din plățile zilei de ' + roDate(x.date) + '.', 'ok');
 }
 $('#cfPay').addEventListener('change', payNote);
 $('#cfDate').addEventListener('input', payNote);
 $('#cfDateChips').addEventListener('click', e => { const b = e.target.closest('[data-cfd]'); if (b) { $('#cfDate').value = b.dataset.cfd; payNote(); } });
-const payChanged = () => { renderCasa(); renderQueue(); };
+const payChanged = () => { renderCasa(); renderQueue(); renderRegister(); };
 function invClick(e){
   const b = e.target.closest('[data-dinv]'); if (!b) return;
   const x = invStatus().find(y => y.key === b.dataset.key); if (!x) return;
@@ -3456,8 +3497,8 @@ $('#btnPayBank').addEventListener('click', () => openForm('out', 'bank', 'Depune
 $('#btnPayOther').addEventListener('click', () => openForm('out', 'other', 'Altă plată în numerar', '', null));
 $('#btnInBank').addEventListener('click', () => openForm('inn', 'bank', 'Ridicare numerar din bancă', 'Ridicare numerar din bancă', null));
 $('#btnInOther').addEventListener('click', () => openForm('inn', 'other', 'Altă încasare în numerar', '', null));
-function backToQueue(){ showTab('nir'); setTimeout(() => $('#qSec').scrollIntoView({block: 'start', behavior: 'smooth'}), 60); }
-$('#cfCancel').addEventListener('click', () => { const back = CF && CF.fromQ; CF = null; $('#cForm').hidden = true; if (back) backToQueue(); });
+function backToQueue(where){ showTab('nir'); setTimeout(() => { const el = where === 'reg' ? $('#regList') : $('#qSec'); if (el && !el.hidden) el.scrollIntoView({block: 'start', behavior: 'smooth'}); }, 60); }
+$('#cfCancel').addEventListener('click', () => { const back = CF && CF.fromQ; CF = null; $('#cForm').hidden = true; if (back) backToQueue(back); });
 $('#cfSave').addEventListener('click', async () => {
   if (!CF) return;
   const label = $('#cfLabel').value.trim(), doc = $('#cfDoc').value.trim(), amt = leiNum($('#cfAmt').value);
@@ -3476,7 +3517,7 @@ $('#cfSave').addEventListener('click', async () => {
   if (CF.kind === 'inv') Object.assign(item, {key: CF.key, sup: CF.sup, invNo: CF.invNo, invDate: CF.invDate, method});
   const mode = CF.mode, back = CF.fromQ; CF = null; $('#cForm').hidden = true;
   const d = getDay(date); (mode === 'out' ? d.out : d.inn).push(item); await putDay(d); payChanged();
-  if (back) backToQueue();
+  if (back) backToQueue(back);
   const where = date === CDAY || back ? '' : ' (nu în ziua deschisă acum, ' + roDate(CDAY) + ')';
   if (method === 'card') toast('Factura ' + item.invNo + ' e marcată plătită cu card/transfer: ' + m2(item.amount) + ' lei pe ' + roDate(date) + '. Nu intră în registrul de casă.', 'ok');
   else toast((mode === 'out' ? 'Plata' : 'Încasarea') + ' de ' + m2(item.amount) + ' lei a intrat în registrul de casă pe ' + roDate(date) + where + '.' + '', 'ok');
@@ -3490,6 +3531,7 @@ document.addEventListener('click', async e => {
 $('#btnCasaPdf').addEventListener('click', async () => {
   if (!startSet()) { toast('Pune întâi soldurile de pornire, la „Gestiune”.', 'bad'); return; }
   if (CDAY < S.start.date) { toast('Ziua e înainte de data de start.', 'bad'); return; }
+  if (!hasMove(getDay(CDAY))) { toast('Pe ' + roDate(CDAY) + ' magazinul e închis și nu s-au mișcat bani: ziua nu are filă în registrul de casă.', 'ok'); return; }
   const b = cashBook(CDAY).get(CDAY);
   try {
     await saveBlob('Registru-de-casa_' + CDAY + '.pdf', await buildCashPdf(CDAY, CDAY, true), CDAY, CG_DIR);
@@ -3503,10 +3545,12 @@ $('#btnCasaPdf').addEventListener('click', async () => {
 function renderGest(){
   if ($('#paneGest').hidden) return;
   const act = document.activeElement, st = S.start || {};
+  if (!startSet()) $('#gStart').open = true;
   if ($('#stDate') !== act) $('#stDate').value = st.date || '';
   if ($('#stStock') !== act) $('#stStock').value = fmtIn(st.stock);
   if ($('#stCash') !== act) $('#stCash').value = fmtIn(st.cash);
   renderPv(); renderEst();
+  $('#stSun').checked = !S.sunOpen;
   $('#gStartSum').textContent = startSet() ? '· din ' + roDate(st.date) + ': marfă ' + m2(st.stock || 0) + ' lei, casă ' + m2(st.cash || 0) + ' lei' : '· nepuse';
   if (!startSet()) { $('#gStart').open = true; $('#gHead').textContent = 'Pune soldurile de pornire ca să pot calcula gestiunea.'; $('#gList').innerHTML = ''; $('#gMore').hidden = true; return; }
   const to = today() < st.date ? st.date : today(), book = stockBook(to), dates = [...book.keys()].reverse();
@@ -3529,7 +3573,7 @@ function renderGest(){
 $('#gMore').addEventListener('click', () => { gAll = true; renderGest(); });
 let eAll = false;
 // the last day with sales typed in (the day you have reached with the cash book), or today if none yet
-function lastSalesDay(){ let last = ''; if (startSet()) eachDate(S.start.date, today(), x => { if (salesIn(getDay(x))) last = x; }); return last; }
+function lastSalesDay(){ let last = ''; if (startSet()) eachDate(S.start.date, today(), x => { const d = getDay(x); if (salesIn(d) && !d.autoClosed) last = x; }); return last; }
 function renderEst(){
   if (!startSet()) { $('#eBox').hidden = true; return; }
   $('#eBox').hidden = false;
@@ -3585,13 +3629,16 @@ function rangeOk(){
   if (!isoOk(a) || !isoOk(z) || a > z) { toast('Alege perioada: „De la” trebuie să fie înainte de „Până la”.', 'bad'); return null; }
   return [a < S.start.date ? S.start.date : a, z];
 }
+$('#stSun').addEventListener('change', async e => { S.sunOpen = !e.target.checked; saveStore(); await renumberZ(); renderGest(); renderCasa(); toast(S.sunOpen ? 'Duminicile nu mai sunt închise implicit: le completezi ca pe orice zi.' : 'Duminicile sunt închise implicit. Una în care ai lucrat o deschizi la Casă, scriind vânzările.', 'ok'); });
 $('#btnGestPdf').addEventListener('click', async () => {
   const r = rangeOk(); if (!r) return;
+  { const has = gestDays(); let any = false; eachDate(r[0], r[1], x => { if (has(x)) any = true; }); if (!any) { toast('În perioada aleasă magazinul a fost închis și nu există NIR-uri: nu e nimic de raportat.', 'ok'); return; } }
   const g = stockBook(r[1]).get(r[1]);
   try { await saveBlob('Raport-de-gestiune_' + r[0] + '_' + r[1] + '.pdf', await buildGestPdf(r[0], r[1], true), r[1], CG_DIR); const note = SAVE_NOTE; SAVE_NOTE = ''; toast('Raportul de gestiune ' + roDate(r[0]) + ' – ' + roDate(r[1]) + ' a fost salvat.' + (note ? ' ' + note : '') + (g && !g.final ? ' Atenție: e PROVIZORIU, pentru că ' + (g.wait ? roDate(g.wait.date) + ': ' + g.wait.gap : g.gap) + '.' : ''), g && !g.final ? 'bad' : 'ok'); renderGest(); } catch (e) { saveErr(e, 'PDF'); }
 });
 $('#btnCasaRange').addEventListener('click', async () => {
   const r = rangeOk(); if (!r) return;
+  { let any = false; eachDate(r[0], r[1], x => { if (hasMove(getDay(x))) any = true; }); if (!any) { toast('În perioada aleasă magazinul a fost închis și nu s-au mișcat bani: nu e nicio filă de registru.', 'ok'); return; } }
   const c = cashBook(r[1]).get(r[1]);
   try { await saveBlob('Registru-de-casa_' + r[0] + '_' + r[1] + '.pdf', await buildCashPdf(r[0], r[1], true), r[1], CG_DIR); const note = SAVE_NOTE; SAVE_NOTE = ''; toast('Registrul de casă ' + roDate(r[0]) + ' – ' + roDate(r[1]) + ' a fost salvat (o filă pe zi).' + (note ? ' ' + note : '') + (c && !c.final ? ' Atenție: e PROVIZORIU de la ' + roDate(c.wait.date) + ', pentru că ' + c.wait.gap + '.' : ''), c && !c.final ? 'bad' : 'ok'); } catch (e) { saveErr(e, 'PDF'); }
 });
@@ -3673,7 +3720,7 @@ function gestPages(from, to){
       y += 13; p.segs([['Gestiunea: ', 0], [S.gest || 'Magazin', 1]], ML, y, 9);
       y += 26; p.text('RAPORT DE GESTIUNE', W / 2, y, 14, {b: 1, a: 'c'});
       y += 16; p.segs([['Nr. ', 0], [String(gestNo(to)), 1], ['     Perioada: ', 0], [roDate(from) + ' – ' + roDate(to), 1], ['     Data întocmirii: ', 0], [roDate(today()), 1]], W / 2, y, 9.5, 'c');
-      y += 12; p.text('Evidență global-valorică, la preț de vânzare cu amănuntul (cu TVA). Garanțiile SGR nu fac parte din gestiune și sunt scăzute din vânzări.', W / 2, y, 7, {a: 'c', c: PMUTE});
+      y += 12; p.text('Evidență global-valorică, la preț de vânzare cu amănuntul (cu TVA). Ambalajul returnabil (garanțiile SGR) nu face parte din gestiune și este scăzut din vânzări.', W / 2, y, 7, {a: 'c', c: PMUTE});
       if (last && !last.final) { y += 13; const w = last.wait || {date: to, gap: last.gap}; wrapTxt('PROVIZORIU: de la ' + roDate(w.date) + ' soldurile nu sunt definitive (' + w.gap + ').', W - ML - MR, 8, 1).forEach(l => { p.text(l, W / 2, y, 8, {a: 'c', b: 1, c: '0.69 0.15 0.11'}); y += 10; }); y -= 10; }
       y += 14;
     }
@@ -3698,7 +3745,7 @@ function gestPages(from, to){
     nd.forEach(r => { const v = round2(r.model.totals.val || 0); tin += v; put({n: k++, fel: r.stornoOf ? 'NIR storno' : 'NIR', nr: (r.serie ? r.serie + ' ' : '') + r.nr, dt: roDate(r.date), exp: (r.supName || '') + ', fact. ' + (r.invNo || '') + (r.stornoOf ? ' (stornare NIR ' + r.stornoOf + ')' : ''), inc: v}); });
     (d.pv || []).forEach(x => { const v = round2(x.amount || 0); if (v >= 0) tin += v; else tout -= v; put({n: k++, fel: 'PV', nr: x.doc || '', dt: roDate(date), exp: x.label || 'Modificare de preț', inc: v >= 0 ? v : null, out: v < 0 ? -v : null}); });
     if (d.closed) put({dt: roDate(date), exp: 'Magazin închis: fără vânzări'});
-    else if (salesIn(d)) { tout += g.out; put({n: k++, fel: 'Raport Z', nr: d.zNo || '', dt: roDate(date), exp: 'Vânzări cu amănuntul: numerar ' + m2(d.cash || 0) + ' + card ' + m2(d.card || 0) + ' − garanții SGR ' + m2(d.sgr || 0), out: g.out}); }
+    else if (salesIn(d)) { tout += g.out; put({n: k++, fel: 'Raport Z', nr: d.zNo || '', dt: roDate(date), exp: 'Vânzări cu amănuntul: numerar ' + m2(d.cash || 0) + ' + card ' + m2(d.card || 0) + ' − ambalaj returnabil (garanții SGR) ' + m2(d.sgr || 0), out: g.out}); }
     else put({dt: roDate(date), exp: 'Vânzările zilei nu au fost introduse'});
     put({exp: 'Sold la sfârșitul zilei ' + roDate(date) + ': ' + m2(g.fin) + ' lei' + (g.final ? '' : ' (provizoriu)'), shade: '0.97 0.97 0.98'});
   });
