@@ -345,6 +345,9 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
       <label class="f">Nr. NIR<input type="text" id="nirNo" inputmode="numeric" autocomplete="off"></label>
       <label class="f">Data recepției<input type="date" id="nirDate"></label>
       <label class="tog wide"><input type="checkbox" id="attachInv"><span>Pun factura originală (PDF) pe ultimele pagini ale NIR-ului</span></label>
+      <label class="f">Cât stă factura în coadă<select id="qDays"><option value="0">fără așteptare</option><option value="1">1 zi lucrătoare</option><option value="2">2 zile lucrătoare</option><option value="3">3 zile lucrătoare</option><option value="4">4 zile lucrătoare</option><option value="5">5 zile lucrătoare (termenul SPV, recomandat)</option><option value="6">6 zile lucrătoare</option><option value="7">7 zile lucrătoare</option><option value="8">8 zile lucrătoare</option><option value="9">9 zile lucrătoare</option><option value="10">10 zile lucrătoare</option></select></label>
+      <label class="tog wide"><input type="checkbox" id="qPlus"><span>Plus o zi după ele (NIR-ul se face a doua zi după ultima zi de așteptare)</span></label>
+      <p class="reg-note wide" id="qRuleNote"></p>
       <label class="f">Data NIR-urilor<select id="dateRule"><option value="inv">data facturii (recomandat)</option><option value="emit">ziua în care emiți</option></select></label>
       <label class="f">Adaos standard (%)<input type="text" id="pctDefault" inputmode="decimal" autocomplete="off"></label>
       <label class="f">Rotunjire preț de raft
@@ -432,11 +435,11 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
     <p>Produsele care vin la bucată, dar le vinzi la kilogram: atinge „Vând la kg”. Greutatea se citește din denumire (6KG, 1200G) și se poate corecta; alegerea rămâne ținută minte pentru acel produs.</p>
     <p>Țigările au preț impus: nu le poți vinde peste prețul de vânzare cu amănuntul declarat de producător. Atinge produsul și scrie „Preț fix”; rămâne ținut minte. La produsele cu gramaj vezi și prețul pe kg sau pe litru, pentru etichetă.</p>
     <p>Când un furnizor îți vinde un produs cu peste 5% mai scump decât la recepția anterioară, produsul e marcat cu roșu „Scumpit”. Pragul îl schimbi la „Date NIR”.</p>
-    <p>Coada: fiecare factură încărcată intră în coadă și îi vezi imediat prețurile de raft și valoarea estimată, dar primește număr de NIR abia după ce se închide ziua ei: 5 zile lucrătoare (termenul în care furnizorii trebuie s-o trimită în SPV, fără weekenduri și sărbători legale) plus o zi. „Emite NIR-urile” le emite pe toate cele gata, strict în ordinea datei. Dacă una are ceva de decis (preț de raft schimbat, scumpire, plafonare, avertisment), lotul se oprește la ea și îți spune ce să faci; după ce o rezolvi și apeși „Emite NIR (PDF)”, continuă singur cu următoarele. Așa numerele urmează datele: 12, 13, 14.</p>
+    <p>Coada: fiecare factură încărcată intră în coadă și îi vezi imediat prețurile de raft și valoarea estimată, dar primește număr de NIR abia după ce se închide ziua ei: implicit 5 zile lucrătoare (termenul în care furnizorii trebuie s-o trimită în SPV, fără weekenduri și sărbători legale) plus o zi. Numărul de zile îl alegi la „Date NIR” → „Cât stă factura în coadă”. „Emite NIR-urile” le emite pe toate cele gata, strict în ordinea datei. Dacă una are ceva de decis (preț de raft schimbat, scumpire, plafonare, avertisment), lotul se oprește la ea și îți spune ce să faci; după ce o rezolvi și apeși „Emite NIR (PDF)”, continuă singur cu următoarele. Așa numerele urmează datele: 12, 13, 14.</p>
     <p>Niciun NIR nu se emite singur: doar când apeși „Emite NIR-urile” și confirmi că ai pus în coadă toate facturile apărute în Oblio. Dacă descarci facturile o dată pe săptămână, regula e simplă: întâi descarci tot din Oblio, abia apoi emiți.</p>
     <p>Dosarul cu facturi: îl alegi o singură dată (de exemplu Download/Facturi). De fiecare dată când deschizi aplicația sau revii în ea, facturile noi din dosar intră singure în coadă; fiecare fișier e citit o singură dată. Android nu dă acces direct la dosarul Download, de aceea trebuie un subdosar.</p>
     <p>Factura originală: PDF-ul încărcat se pune pe ultimele pagini ale NIR-ului, ca la deschiderea NIR-ului să ai și documentul care a stat la baza lui. Facturile venite doar ca XML nu au PDF de pus.</p>
-    <p>Raportul lunar: apare sus după ce luna s-a închis (după ultima zi a lunii mai trec 5 zile lucrătoare plus o zi, iar în coadă nu mai sunt facturi din luna aceea). Butonul deschide emailul cu toate NIR-urile lunii, către adresa pusă la „Registru NIR”.</p>
+    <p>Raportul lunar: apare sus după ce luna s-a închis (după ultima zi a lunii trec zilele de așteptare din coadă, iar în coadă nu mai sunt facturi din luna aceea). Butonul deschide emailul cu toate NIR-urile lunii, către adresa pusă la „Registru NIR”.</p>
     <p>Garanția SGR nu intră în baza de TVA și nici în NIR. La raft și pe bon se afișează separat: prețul produsului plus 0,50 lei garanție.</p>
     <p>Transportul de pe factură intră în costul mărfii, nu la raft. Ambalajele facturate (navete, paleți) se trec separat. Marfa gratuită intră la prețul normal de vânzare.</p>
     <p>NIR-ul se descarcă ca PDF de tipărit, în structura formularului 14-3-1A, sau ca Excel. PDF-ul și XML-ul facturii se citesc doar pe dispozitivul tău. O poză, sau un PDF în alt format decât cel ANAF, se trimite la Claude pentru citire, din contul tău.</p>
@@ -614,10 +617,18 @@ const HOLIDAYS = (() => {
   })());
 })();
 function isWorkday(iso){ const w = new Date(iso + 'T00:00:00Z').getUTCDay(); return w !== 0 && w !== 6 && !HOLIDAYS(+iso.slice(0, 4)).has(iso); }
-// last day a supplier may send the invoice to SPV: 5 working days after issue (OUG 120/2021 art. 10, as amended by OUG 89/2025; counted per Reg. 1182/71)
+// last day a supplier may send the invoice to SPV: 5 working days after issue (OUG 120/2021 art. 10, as amended by OUG 89/2025; counted per Reg. 1182/71); legal fact, not the queue setting
 function spvDeadline(iso){ let d = iso, k = 0; while (k < 5) { d = addDays(d, 1); if (isWorkday(d)) k++; } return d; }
 // the day after the deadline every invoice of that date is in SPV/Oblio, so its NIR can take its place in the numbering
-function readyDate(iso){ return isoOk(iso) ? addDays(spvDeadline(iso), 1) : ''; }
+// how long an invoice waits in the queue: S.qDays working days after its date (default 5, the SPV term), plus one day if S.qPlus
+function waitEnd(iso){ let d = iso, k = 0; while (k < S.qDays) { d = addDays(d, 1); if (isWorkday(d)) k++; } return d; }
+function readyDate(iso){ return isoOk(iso) ? addDays(waitEnd(iso), S.qPlus ? 1 : 0) : ''; }
+function qRuleShort(){ return (S.qDays === 1 ? '1 zi lucrătoare' : S.qDays + ' zile lucrătoare') + (S.qPlus ? ' plus o zi' : ''); }
+function qRuleText(){
+  const t = today(), r = readyDate(t), lim = spvDeadline(t);
+  return 'Exemplu: o factură din ' + roDate(t) + ' primește NIR pe ' + roDate(r) + '. ' + (r > lim ? 'Așteaptă după termenul legal de SPV (' + roDate(lim) + '): nicio factură din ziua ei nu mai poate veni după ce primește NIR.' :
+    'Atenție: furnizorii au voie să trimită factura în SPV până pe ' + roDate(lim) + ' (5 zile lucrătoare, OUG 89/2025). O factură din aceeași zi venită după ce ziua s-a închis primește un număr de NIR în afara ordinii datelor; aplicația te oprește la ea și îți cere confirmarea, iar ziua de casă și de gestiune redevine provizorie până îi faci NIR-ul.');
+}
 function dayClosed(iso){ return isoOk(iso) && today() >= readyDate(iso); }
 function lastDayOf(ym){ const [y, m] = ym.split('-').map(Number); return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10); }
 function roDate(iso){ const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? m[3] + '.' + m[2] + '.' + m[1] : (iso || ''); }
@@ -644,6 +655,7 @@ const S = {
   step: STEPS.includes(saved.step) ? saved.step : 0.1,
   risePct: typeof saved.risePct === 'number' ? saved.risePct : 5,
   dateRule: saved.dateRule === 'emit' ? 'emit' : 'inv', batch: false, qKey: null, attach: saved.attach !== false, srcFrom: isoOk(saved.srcFrom) ? saved.srcFrom : '', srcLast: saved.srcLast || '', lastImport: saved.lastImport || '', start: saved.start && isoOk(saved.start.date) ? saved.start : null, later: saved.later && typeof saved.later === 'object' ? saved.later : {}, sunOpen: saved.sunOpen === true,
+  qDays: Number.isInteger(saved.qDays) && saved.qDays >= 0 && saved.qDays <= 10 ? saved.qDays : 5, qPlus: saved.qPlus !== false,
   overrides: saved.overrides && typeof saved.overrides === 'object' ? saved.overrides : {},
   nextNir: Number.isInteger(saved.nextNir) && saved.nextNir > 0 ? saved.nextNir : 1,
   serie: saved.serie || '', unitName: saved.unitName || '', unitCui: saved.unitCui || '', unitReg: saved.unitReg || '', gest: saved.gest || '',
@@ -662,7 +674,7 @@ function saveStore(){
   try { localStorage.setItem(STORE, JSON.stringify(settingsBlob())); } catch (e) {}
 }
 function settingsBlob(){
-  return {pct:S.pct, step:S.step, risePct:S.risePct, dateRule:S.dateRule, attach:S.attach, srcFrom:S.srcFrom, srcLast:S.srcLast, lastImport:S.lastImport, start:S.start, later:S.later, sunOpen:S.sunOpen, overrides:S.overrides, nextNir:S.startNr, serie:S.serie, company:S.company, gest:S.gest, com:S.com, gestionar:S.gestionar, repEmail:S.repEmail, lastReport:S.lastReport, repBackup:S.repBackup, maxNr:S.maxNr, sent:S.sent};
+  return {pct:S.pct, step:S.step, risePct:S.risePct, dateRule:S.dateRule, attach:S.attach, srcFrom:S.srcFrom, srcLast:S.srcLast, lastImport:S.lastImport, start:S.start, later:S.later, sunOpen:S.sunOpen, qDays:S.qDays, qPlus:S.qPlus, overrides:S.overrides, nextNir:S.startNr, serie:S.serie, company:S.company, gest:S.gest, com:S.com, gestionar:S.gestionar, repEmail:S.repEmail, lastReport:S.lastReport, repBackup:S.repBackup, maxNr:S.maxNr, sent:S.sent};
 }
 
 /* ---------------- ZIP read (SPV archive) ---------------- */
@@ -1552,6 +1564,7 @@ function render(){
 
   const act = document.activeElement, co = S.company || {};
   const put = (id, v) => { const el = $('#' + id); if (el !== act) el.value = v; };
+  put('qDays', String(S.qDays)); $('#qPlus').checked = !!S.qPlus; $('#qRuleNote').textContent = qRuleText();
   put('dateRule', S.dateRule); $('#attachInv').checked = !!S.attach; put('nirSerie', S.serie); put('nirNo', C.dupRec ? String(C.dupRec.nr) : S.nirNo); put('nirDate', C.dupRec ? C.dupRec.date : S.nirDate); put('pctDefault', String(S.pct).replace('.', ','));
   put('step', String(S.step)); put('riseP', String(S.risePct).replace('.', ',')); put('gest', S.gest);
   put('unitName', co.name || ''); put('unitCui', co.cui || ''); put('unitReg', co.reg || '');
@@ -1683,6 +1696,9 @@ $('#others').addEventListener('change', onLineChange);
 function bindSetting(id, apply){ $('#' + id).addEventListener('change', e => { apply(e.target.value); saveStore(); render(); }); }
 bindSetting('nirSerie', v => { S.serie = v.trim(); });
 $('#attachInv').addEventListener('change', e => { S.attach = e.target.checked; saveStore(); });
+bindSetting('qDays', v => { const n = parseInt(v, 10); if (n >= 0 && n <= 10) S.qDays = n; EST.clear(); qChanged(); });
+$('#qPlus').addEventListener('change', e => { S.qPlus = e.target.checked; EST.clear(); saveStore(); render(); qChanged(); });
+function qChanged(){ renderCasa(); renderGest(); toast('Facturile stau acum în coadă ' + qRuleShort() + '. ' + qRuleText(), readyDate(today()) > spvDeadline(today()) ? 'ok' : 'bad'); }
 bindSetting('dateRule', v => { S.dateRule = v === 'emit' ? 'emit' : 'inv'; if (S.inv && !S.example) S.nirDate = nirDateFor(S.inv); EST.clear(); });
 bindSetting('nirNo', v => { S.nirNo = v.trim(); const n = parseInt(S.nirNo, 10); if (!REG.length && /^\d+$/.test(S.nirNo) && n > 0) S.startNr = n; });
 bindSetting('nirDate', v => { S.nirDate = v || (S.inv && S.inv.date) || today(); });
@@ -1917,7 +1933,7 @@ function renderQueue(){
   b.disabled = BATCH_RUNNING || !g.ready.length;
   $('#qReadyNote').textContent = !g.ready.length ? '' : stopAt < 0 ? 'Se emit toate, în ordinea datei. Dacă una are nevoie de tine, lotul se oprește la ea și continuă după ce o rezolvi.' : stopAt === 0 ? 'Prima factură are nevoie de tine: lotul se oprește la ea, o rezolvi, apoi continuă singur.' : (stopAt === 1 ? 'Se emite prima factură' : 'Se emit în ordine primele ' + stopAt) + ', apoi lotul se oprește la cea care are nevoie de tine și continuă după ce o rezolvi.';
   $('#qNote').textContent = (g.wait.length && isoOk(g.wait[0].q.inv.date) ? 'Următoarea zi se închide pe ' + roDate(readyDate(g.wait[0].q.inv.date)) + '. ' : '') +
-    'Valorile sunt estimate cu prețurile de azi; cele finale se stabilesc la emitere. NIR-urile primesc numerele la rând, în ordinea datei facturii. Plata o poți alege de acum: rămâne pe factură și după ce primește NIR.';
+    'Facturile stau în coadă ' + qRuleShort() + ' (schimbi la „Date NIR”). Valorile sunt estimate cu prețurile de azi; cele finale se stabilesc la emitere. NIR-urile primesc numerele la rând, în ordinea datei facturii. Plata o poți alege de acum: rămâne pe factură și după ce primește NIR.';
 }
 // payment buttons on an invoice, in the queue ('q') or in the NIR register ('reg'): the same choice as in Casă
 async function payBtn(p, from){
@@ -2882,6 +2898,7 @@ $('#fileRestore').addEventListener('change', async e => {
     if (!S.start && st.start && isoOk(st.start.date)) S.start = st.start;
     if (st.later && typeof st.later === 'object') S.later = Object.assign({}, st.later, S.later);
     if (st.sunOpen === true) S.sunOpen = true;
+    if (S.qDays === 5 && S.qPlus && Number.isInteger(st.qDays) && st.qDays >= 0 && st.qDays <= 10) { S.qDays = st.qDays; S.qPlus = st.qPlus !== false; }
     let daysIn = 0;
     for (const d of Array.isArray(data.days) ? data.days : []) {
       if (!d || !isoOk(d.date)) continue;
@@ -3006,7 +3023,7 @@ function renderReport(){
   $('#repBackup').checked = !!S.repBackup;
   $('#btnReport').disabled = !months.length;
   $('#repNote').textContent = (S.lastReport ? 'Ultimul raport trimis: ' + monthName(S.lastReport) + '. ' : '') +
-    'Butonul pentru o lună apare sus după ce luna s-a închis: ultima ei zi trebuie să treacă de cele 5 zile lucrătoare de SPV, plus o zi, iar în coadă să nu mai fie facturi din luna aceea. Se deschide aplicația de email cu PDF-ul (registrul lunii plus toate NIR-urile), registrul în CSV' + (S.repBackup ? ' și copia de siguranță' : '') + '. Adresa se copiază singură: o lipești la „Către” și apeși Trimite.';
+    'Butonul pentru o lună apare sus după ce luna s-a închis: ultima ei zi trebuie să treacă de zilele de așteptare din coadă (' + qRuleShort() + '), iar în coadă să nu mai fie facturi din luna aceea. Se deschide aplicația de email cu PDF-ul (registrul lunii plus toate NIR-urile), registrul în CSV' + (S.repBackup ? ' și copia de siguranță' : '') + '. Adresa se copiază singură: o lipești la „Către” și apeși Trimite.';
   const b = $('#repBanner');
   if (!due) {
     const w = unreported()[0];
