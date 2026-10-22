@@ -222,7 +222,8 @@ textarea.fallback{width:100%;min-height:120px;font:.75rem var(--f-num);backgroun
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--carbon)}
 .tabpane{display:flex;flex-direction:column;gap:18px}
 .tabpane[hidden]{display:none}
-body[data-tab="casa"] .bar-row,body[data-tab="gest"] .bar-row{display:none}
+body[data-tab="casa"] .bar-row,body[data-tab="gest"] .bar-row,body[data-tab="home"] .bar-row{display:none}
+body[data-tab="home"] .bar:has(.toast:empty){display:none}
 body[data-tab="casa"] .bar:has(.toast:empty),body[data-tab="gest"] .bar:has(.toast:empty){display:none}
 .card{display:grid;gap:10px;padding:14px;border:1px solid var(--rule);border-radius:10px;background:var(--sheet)}
 .card h3{margin:0;font:700 1rem var(--f-body)}
@@ -262,6 +263,45 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
 .seg label{display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--rule);border-radius:999px;cursor:pointer;font-size:.92rem;background:var(--paper)}
 .seg label:has(input:checked){border-color:var(--carbon);font-weight:600}
 #cfPay .chips{margin-top:8px}
+/* home: the three jobs of a shop day, each with one sentence of state and one main action */
+.lede{display:none}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:-6px}
+.subtabs button{flex:1;min-width:0;font:600 .85rem var(--f-body);padding:8px 10px;border-radius:999px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink-2);cursor:pointer}
+.subtabs button[aria-selected="true"]{background:var(--carbon);border-color:var(--carbon);color:var(--on-carbon)}
+.home{display:flex;flex-direction:column;gap:20px;padding-bottom:28px}
+.h-head{display:grid;gap:4px;padding:2px 2px 0}
+.h-head h2{font-family:var(--f-display);font-stretch:80%;font-weight:700;font-size:1.75rem;line-height:1.1}
+.h-head p{color:var(--ink-2);font-size:.98rem}
+.h-head p.ok{color:var(--ok)}
+.h-block{display:grid;gap:12px;padding:16px;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;border-left:4px solid var(--rule)}
+.h-block.todo{border-left-color:var(--carbon)}
+.h-block.done{border-left-color:var(--ok)}
+.h-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.h-row h3{font:600 1.08rem var(--f-body)}
+.h-state{font-size:.85rem;color:var(--ink-2);text-align:right}
+.h-block.todo .h-state{color:var(--carbon);font-weight:600}
+.h-block.done .h-state{color:var(--ok);font-weight:600}
+.h-line{color:var(--ink-2);font-size:.92rem}
+.h-line b{color:var(--ink);font-weight:600}
+.h-line.bad{color:var(--bad)}
+.h-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.h-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:12px 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.h-item small{display:block;color:var(--ink-2);font-size:.8rem}
+.h-item .q-pay{grid-column:1 / -1}
+.h-item .q-pay .chip{font-size:.82rem;padding:8px 11px}
+.h-amt{font:500 .98rem var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.h-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.h-acts .btn{padding:12px 16px}
+.h-link{background:none;border:0;padding:4px 0;font:600 .88rem var(--f-body);color:var(--carbon);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.h-zday{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.h-zday b{font:600 1.15rem var(--f-body)}
+.h-zgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.h-zgrid input{font-size:18px;padding:11px 12px}
+.h-ask{display:grid;gap:10px;padding:12px;border-radius:10px;background:var(--carbon-soft)}
+.h-foot{color:var(--ink-2);font-size:.92rem;padding:0 4px;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.h-foot b{color:var(--ink);font:500 .95rem var(--f-num)}
+details.help{border-top:1px solid var(--rule);padding-top:10px}
+details.help summary{cursor:pointer;font:600 .88rem var(--f-body);color:var(--carbon);padding:6px 0}
 </style>
 
 </head>
@@ -273,12 +313,77 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Secțiuni">
-    <button type="button" role="tab" id="tb-nir" data-tab="nir" aria-selected="true">NIR</button>
-    <button type="button" role="tab" id="tb-casa" data-tab="casa" aria-selected="false">Casă</button>
-    <button type="button" role="tab" id="tb-gest" data-tab="gest" aria-selected="false">Gestiune</button>
+    <button type="button" role="tab" id="tb-home" data-tab="home" aria-selected="true">Acasă</button>
+    <button type="button" role="tab" id="tb-more" data-tab="more" aria-selected="false">Mai mult</button>
+  </nav>
+  <nav class="subtabs" id="subTabs" aria-label="Mai mult" hidden>
+    <button type="button" id="tb-nir" data-tab="nir" aria-selected="false">Facturi și NIR-uri</button>
+    <button type="button" id="tb-casa" data-tab="casa" aria-selected="false">Casă</button>
+    <button type="button" id="tb-gest" data-tab="gest" aria-selected="false">Gestiune</button>
   </nav>
 
-  <div class="tabpane" id="paneNir">
+  <section class="tabpane home" id="paneHome" aria-label="Acasă">
+    <div class="h-head"><h2 id="hDay"></h2><p id="hSum"></p></div>
+
+    <div class="h-block todo" id="hStart" hidden>
+      <div class="h-row"><h3>De unde pornesc casa și marfa</h3></div>
+      <p class="h-line">O singură dată: le iei de la contabilă, din seara dinaintea zilei de start. Marfa din magazin la preț de vânzare cu TVA (contul 371) și numerarul din casă (contul 5311). Le poți schimba oricând la Mai mult → Gestiune.</p>
+      <label class="f">Ziua de start<input type="date" id="hStDate"></label>
+      <div class="h-zgrid">
+        <label class="f">Marfa din magazin (lei)<input type="text" id="hStStock" inputmode="decimal" autocomplete="off" placeholder="ex. 45.300,50"></label>
+        <label class="f">Numerar în casă (lei)<input type="text" id="hStCash" inputmode="decimal" autocomplete="off" placeholder="ex. 1.250,00"></label>
+      </div>
+      <div class="h-acts"><button class="btn primary" id="hStSave" type="button">Salvează</button></div>
+    </div>
+
+    <div class="h-block" id="hInv">
+      <div class="h-row"><h3>Facturi</h3><span class="h-state" id="hInvState"></span></div>
+      <p class="h-line" id="hInvLine"></p>
+      <ol class="h-list" id="hPayList"></ol>
+      <p class="h-line" id="hPayMore"></p>
+      <div class="h-acts">
+        <button class="btn primary" id="hScan" type="button">Verifică dosarul</button>
+        <label class="btn" id="hFileL" for="hFile">Încarcă facturi<input class="vh" id="hFile" type="file" multiple accept=".pdf,application/pdf,.xml,.zip,text/xml,application/xml,application/zip,application/x-zip-compressed"></label>
+      </div>
+    </div>
+
+    <div class="h-block" id="hZ">
+      <div class="h-row"><h3>Vânzări din raportul Z</h3><span class="h-state" id="hZState"></span></div>
+      <p class="h-line" id="hZLine"></p>
+      <div class="h-acts" id="hZTodayBox" hidden><button class="btn" id="hZToday" type="button">Trec vânzările de azi</button></div>
+      <div id="hZForm">
+        <div class="h-zday"><b id="hZDay"></b></div>
+        <div class="h-zgrid">
+          <label class="f">Numerar (lei)<input type="text" id="hCash" inputmode="decimal" autocomplete="off"></label>
+          <label class="f">Card (lei)<input type="text" id="hCard" inputmode="decimal" autocomplete="off"></label>
+          <label class="f">Ambalaj returnabil (lei)<input type="text" id="hSgr" inputmode="decimal" autocomplete="off" placeholder="0"></label>
+          <label class="f">Nr. raport Z<input type="text" id="hZNo" inputmode="numeric" autocomplete="off"></label>
+        </div>
+        <div class="h-acts"><button class="btn primary" id="hZSave" type="button">Salvează</button><button class="h-link" id="hZClosed" type="button">Magazin închis în ziua asta</button></div>
+        <p class="h-line" id="hZNote"></p>
+      </div>
+    </div>
+
+    <div class="h-block" id="hNir">
+      <div class="h-row"><h3>NIR-uri</h3><span class="h-state" id="hNirState"></span></div>
+      <p class="h-line" id="hNirLine"></p>
+      <div class="h-ask" id="hAsk" hidden>
+        <p id="hAskText"></p>
+        <div class="h-acts"><button class="btn primary" id="hAskGo" type="button">Da, emite</button><button class="btn" id="hAskNo" type="button">Nu încă</button></div>
+      </div>
+      <div class="h-acts"><button class="btn primary" id="hBatch" type="button">Emite NIR-urile</button><button class="h-link" id="hQueue" type="button">Vezi coada</button></div>
+    </div>
+
+    <div class="h-block todo" id="hRep" hidden>
+      <div class="h-row"><h3>Raportul lunar</h3></div>
+      <p class="h-line" id="hRepLine"></p>
+      <div class="h-acts"><button class="btn primary" id="hRepGo" type="button">Trimite raportul</button><button class="h-link" id="hRepDone" type="button">L-am trimis deja</button></div>
+    </div>
+
+    <p class="h-foot" id="hMoney"></p>
+  </section>
+
+  <div class="tabpane" id="paneNir" hidden>
 
   <section class="intake" aria-label="Încarcă factura">
     <label class="drop" id="dropFile" for="fileInv">
@@ -428,6 +533,7 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
     </div>
   </details>
 
+  <details class="help" id="helpBox"><summary>Cum calculează aplicația</summary>
   <div class="notes">
     <p>Prețul de raft = preț de achiziție fără TVA + adaos, plus TVA-ul produsului, rotunjit o singură dată la 10 bani, la cel mai apropiat: 1,92 devine 1,90, iar 1,95 devine 2,00. Adaosul se recalculează după prețul rotunjit, deci poate ieși puțin peste sau puțin sub adaosul standard (20%, îl schimbi la „Date NIR”).</p>
     <p>Pentru cele 17 grupe de alimente de bază din OUG 67/2023, adaosul e plafonat la 20% față de prețul de achiziție până la 31.12.2026. La ele prețul se rotunjește mereu în jos, deci adaosul rămâne sub 20%. Un produs care seamănă cu unul de pe listă, dar nu sigur, primește tot 20% și e marcat. Îl confirmi o singură dată, iar pagina ține minte.</p>
@@ -444,6 +550,7 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
     <p>Transportul de pe factură intră în costul mărfii, nu la raft. Ambalajele facturate (navete, paleți) se trec separat. Marfa gratuită intră la prețul normal de vânzare.</p>
     <p>NIR-ul se descarcă ca PDF de tipărit, în structura formularului 14-3-1A, sau ca Excel. PDF-ul și XML-ul facturii se citesc doar pe dispozitivul tău. O poză, sau un PDF în alt format decât cel ANAF, se trimite la Claude pentru citire, din contul tău.</p>
   </div>
+  </details>
 
   </div>
 
@@ -1590,7 +1697,7 @@ function render(){
     '<p>Nu intră în NIR și nu primește adaos sau TVA. La raft și pe bon se afișează separat: prețul produsului plus ' + m2(C.sgrRows[0] ? Math.abs(C.sgrRows[0].unit) : 0.5) + ' lei garanție. În casa de marcat garanția e articol separat, scutit de TVA.</p>';
 
   renderRegister();
-  renderQueue();
+  renderQueue(); renderHome();
   try { renderDir(); } catch (e) {}   // the folder note shows this NIR's month; DIR exists only once the page has finished loading
   schedulePreview();
   $('#barTotal').textContent = lei(C.totals.val);
@@ -1815,7 +1922,7 @@ async function onFile(files){
       bad.push(list.length > 1 ? (list[i].name || 'fișier') + ': ' + msg : msg);
     }
   }
-  if (!got.length) { setStatus(esc(bad.length ? bad.join(' · ') : 'Niciunul dintre cele ' + list.length + ' fișiere nu e factură e-Factura (PDF ANAF, XML sau ZIP din SPV).'), 'bad'); return; }
+  if (!got.length) { const m0 = esc(bad.length ? bad.join(' · ') : 'Niciunul dintre cele ' + list.length + ' fișiere nu e factură e-Factura (PDF ANAF, XML sau ZIP din SPV).'); setStatus(m0, 'bad'); homeNote(m0, 'bad'); return; }
   const r = await enqueue(got);
   got.forEach((x, i) => { got[i] = x.inv; });
   const show = r.added.length ? r.added.slice().sort(byInvDate)[0] : r.again.length ? r.again[0] : got[0];
@@ -1832,7 +1939,7 @@ async function onFile(files){
   }
   if (ignored) msg += ' ' + (ignored > 1 ? ignored + ' fișiere nu sunt facturi e-Factura și le-am sărit.' : 'Un fișier nu e factură e-Factura și l-am sărit.');
   if (bad.length) msg += ' Nu am putut citi: ' + esc(bad.join('; ')) + '.';
-  setStatus(msg, bad.length ? 'bad' : 'ok');
+  setStatus(msg, bad.length ? 'bad' : 'ok'); homeNote(msg, bad.length ? 'bad' : 'ok');
 }
 $('#fileInv').addEventListener('change', e => { const f = Array.from(e.target.files || []); e.target.value = ''; onFile(f); });
 
@@ -3039,11 +3146,12 @@ function renderReport(){
     : 'NIR-urile din ' + monthName(due) + ' (' + n + ') nu au fost trimise. Adaugă adresa de email a contabilei.</span><button type="button" class="btn" data-rep="setup">Adaugă emailul</button>') +
     '<button type="button" class="chip" data-rep="done" data-ym="' + due + '">Le-am trimis deja</button></div>';
 }
+function repSetup(){ showTab('nir'); $('#regBox').open = true; const el = $('#repEmail'); setTimeout(() => { el.scrollIntoView({block: 'center'}); el.focus(); }, 60); }
 $('#repBanner').addEventListener('click', e => {
   const t = e.target.closest('[data-rep]'); if (!t) return;
   if (t.dataset.rep === 'send') sendReport(t.dataset.ym);
   else if (t.dataset.rep === 'done') { markSent(t.dataset.ym); toast('Am notat ' + monthName(t.dataset.ym) + ' ca trimis.', 'ok'); }
-  else { $('#regBox').open = true; const el = $('#repEmail'); el.scrollIntoView({block: 'center'}); el.focus(); }
+  else repSetup();
 });
 $('#repEmail').addEventListener('change', e => {
   const v = e.target.value.trim();
@@ -3105,6 +3213,7 @@ function renderSrc(){
   $('#btnSrcPick').textContent = FOLDER.set ? 'Schimbă dosarul' : 'Alege dosarul cu facturi';
   $('#btnSrcScan').disabled = SCANNING || BATCH_RUNNING; $('#btnSrcScan').textContent = SCANNING ? 'Citesc…' : 'Preia facturile noi';
   if ($('#srcFrom') !== document.activeElement) $('#srcFrom').value = S.srcFrom || '';
+  renderHome();
   $('#srcNote').textContent = !FOLDER.set ? 'Alege o singură dată dosarul în care salvezi facturile, de exemplu Download/Facturi (Android nu dă acces chiar la Download, deci trebuie un subdosar). De atunci, facturile noi de acolo intră singure în coadă când deschizi aplicația.'
     : srcState === 'lost' ? 'Nu mai am acces la dosar: a fost mutat, redenumit sau șters. Alege-l din nou.'
     : srcState === 'perm' ? 'Telefonul cere din nou voie să citesc dosarul: apasă „Preia facturile noi” și apoi „Permite”.'
@@ -3136,7 +3245,7 @@ async function scanSource(interactive){
     }
   }
   SCANNING = false; S.srcLast = new Date().toISOString(); saveStore();
-  if (!fresh.length) { renderSrc(); if (interactive) setStatus('Nicio factură nouă în „' + esc(FOLDER.name) + '”.', 'ok'); return; }
+  if (!fresh.length) { renderSrc(); if (interactive) { setStatus('Nicio factură nouă în „' + esc(FOLDER.name) + '”.', 'ok'); homeNote('Nicio factură nouă în dosar.', 'ok'); } renderHome(); return; }
   const r = got.length ? await enqueue(got) : {added: [], again: [], done: [], skipped: 0};
   let msg = 'Din „' + esc(FOLDER.name) + '”: ' + ([r.added.length && r.added.length + (r.added.length > 1 ? ' facturi noi au intrat' : ' factură nouă a intrat') + ' în coadă', r.again.length && r.again.length + ' erau deja în coadă', r.done.length && r.done.length + ' au deja NIR', r.skipped && r.skipped + ' fără număr de factură'].filter(Boolean).join(', ') || 'nicio factură nouă') + '.';
   if (older) msg += ' ' + (older > 1 ? older + ' facturi sunt' : 'O factură e') + ' mai vechi de ' + roDate(S.srcFrom) + ' și le-am lăsat deoparte.';
@@ -3144,7 +3253,7 @@ async function scanSource(interactive){
   if (failed) msg += ' ' + failed + (failed > 1 ? ' fișiere nu au putut fi citite acum; reîncerc data viitoare.' : ' fișier nu a putut fi citit acum; reîncerc data viitoare.');
   // show the oldest new invoice only if you were not looking at another one
   if (r.added.length && S.example) applyInvoice(r.added.slice().sort(byInvDate)[0], false); else render();
-  setStatus(msg, failed ? 'bad' : 'ok'); renderSrc();
+  setStatus(msg, failed ? 'bad' : 'ok'); homeNote(msg, failed ? 'bad' : 'ok'); renderSrc();
 }
 $('#btnSrcPick').addEventListener('click', async () => {
   try { await FOLDER.pick(); }
@@ -3309,17 +3418,23 @@ function gestNo(date){ if (!startSet()) return 1; const has = gestDays(); let n 
 function movesBefore(date){ let n = 0; if (startSet() && date > S.start.date) eachDate(S.start.date, addDays(date, -1), x => { if (hasMove(getDay(x))) n++; }); return n; }
 
 /* ---- tabs ---- */
+let MORE_TAB = 'nir';
 function showTab(t){
+  if (t === 'more') t = MORE_TAB;
+  if (t !== 'home') MORE_TAB = t;
   if (document.body.dataset.tab !== t) toast('');
   document.body.dataset.tab = t;
-  [['nir', 'paneNir'], ['casa', 'paneCasa'], ['gest', 'paneGest']].forEach(([k, id]) => { $('#' + id).hidden = k !== t; $('#tb-' + k).setAttribute('aria-selected', String(k === t)); });
+  [['home', 'paneHome'], ['nir', 'paneNir'], ['casa', 'paneCasa'], ['gest', 'paneGest']].forEach(([k, id]) => { $('#' + id).hidden = k !== t; if (k !== 'home') $('#tb-' + k).setAttribute('aria-selected', String(k === t)); });
+  $('#tb-home').setAttribute('aria-selected', String(t === 'home')); $('#tb-more').setAttribute('aria-selected', String(t !== 'home'));
+  $('#subTabs').hidden = t === 'home';
+  if (t === 'home') renderHome();
   if (t === 'casa') renderCasa();
   if (t === 'gest') renderGest();
   if (t === 'nir') { renderQueue(); renderRegister(); }
   if (t !== 'nir') renderCgDir();
   window.scrollTo(0, 0);
 }
-$('.tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
+document.querySelectorAll('.tabs, .subtabs').forEach(n => n.addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); }));
 document.addEventListener('click', e => { const b = e.target.closest('[data-goto]'); if (b) { showTab(b.dataset.goto); if (b.dataset.goto === 'gest' && (b.dataset.open || !startSet())) { $('#gStart').open = true; } } });
 
 /* ---- Casă ---- */
@@ -3479,7 +3594,7 @@ async function spotPay(x, method){
 $('#cfPay').addEventListener('change', payNote);
 $('#cfDate').addEventListener('input', payNote);
 $('#cfDateChips').addEventListener('click', e => { const b = e.target.closest('[data-cfd]'); if (b) { $('#cfDate').value = b.dataset.cfd; payNote(); } });
-const payChanged = () => { renderCasa(); renderQueue(); renderRegister(); };
+const payChanged = () => { renderCasa(); renderQueue(); renderRegister(); renderHome(); };
 function invClick(e){
   const b = e.target.closest('[data-dinv]'); if (!b) return;
   const x = invStatus().find(y => y.key === b.dataset.key); if (!x) return;
@@ -3514,7 +3629,7 @@ $('#btnPayBank').addEventListener('click', () => openForm('out', 'bank', 'Depune
 $('#btnPayOther').addEventListener('click', () => openForm('out', 'other', 'Altă plată în numerar', '', null));
 $('#btnInBank').addEventListener('click', () => openForm('inn', 'bank', 'Ridicare numerar din bancă', 'Ridicare numerar din bancă', null));
 $('#btnInOther').addEventListener('click', () => openForm('inn', 'other', 'Altă încasare în numerar', '', null));
-function backToQueue(where){ showTab('nir'); setTimeout(() => { const el = where === 'reg' ? $('#regList') : $('#qSec'); if (el && !el.hidden) el.scrollIntoView({block: 'start', behavior: 'smooth'}); }, 60); }
+function backToQueue(where){ showTab(where === 'home' ? 'home' : 'nir'); setTimeout(() => { const el = where === 'home' ? $('#hInv') : where === 'reg' ? $('#regList') : $('#qSec'); if (el && !el.hidden) el.scrollIntoView({block: 'start', behavior: 'smooth'}); }, 60); }
 $('#cfCancel').addEventListener('click', () => { const back = CF && CF.fromQ; CF = null; $('#cForm').hidden = true; if (back) backToQueue(back); });
 $('#cfSave').addEventListener('click', async () => {
   if (!CF) return;
@@ -3796,7 +3911,174 @@ document.addEventListener('click', async e => {
   catch (x) { if (x && x.name === 'AbortError') return; toast('Dosarul nu a putut fi ales. Fișierele merg în continuare în Descărcări.', 'bad'); }
 });
 DIR.load().then(renderCgDir).catch(() => {});
-loadDays().then(() => { renderCasa(); renderGest(); renderQueue(); });
+
+/* ================= Acasă ================= */
+// one screen with the jobs of the shop: invoices (and how they were paid), the Z sales of the days left behind, the NIRs that can be issued
+let HOME_NOTE = null;
+function homeNote(msg, kind){ HOME_NOTE = {msg, kind, at: Date.now()}; renderHome(); }
+const WDL = ['duminică', 'luni', 'marți', 'miercuri', 'joi', 'vineri', 'sâmbătă'], MONL = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie', 'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie'];
+const dayName = iso => WDL[new Date(iso + 'T00:00:00Z').getUTCDay()];
+const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+const dayLong = iso => cap(dayName(iso)) + ', ' + (+iso.slice(8, 10)) + ' ' + MONL[+iso.slice(5, 7) - 1];
+const dayShort = iso => cap(dayName(iso)) + ', ' + dm5(iso);
+// the days whose Z sales are not in yet (a Sunday closed by default needs nothing); today only once the past is done
+function zDays(){
+  const out = []; if (!startSet()) return out;
+  eachDate(S.start.date, today(), x => { if (!salesIn(getDay(x))) out.push(x); });
+  return out;
+}
+// the Z number the day would get: the previous day's number + 1, over closed days; '' if a day in between is not entered
+function zPredict(date){
+  let d = addDays(date, -1);
+  for (let i = 0; i < 400 && (!startSet() || d >= addDays(S.start.date, -1)); i++, d = addDays(d, -1)) {
+    const x = getDay(d);
+    if (x.closed) continue;
+    return x.zNo ? zNext(x.zNo) : '';
+  }
+  return '';
+}
+let HZ_DATE = '', HZ_TODAY = false, HASK = false, HBUSY = false;
+function renderHome(){
+  if (!$('#paneHome') || $('#paneHome').hidden) return;
+  const t = today(), ok = startSet(), st = invStatus(), todo = [];
+  $('#hDay').textContent = dayLong(t);
+  // first run: start balances
+  $('#hStart').hidden = ok;
+  if (!ok && !$('#hStDate').value) $('#hStDate').value = t.slice(0, 8) + '01';
+  // invoices
+  const open = st.filter(x => x.open && (!ok || x.date >= S.start.date)).sort((a, b) => a.date.localeCompare(b.date) || a.sup.localeCompare(b.sup));
+  const lat = st.filter(x => x.later && x.left > 0.004);
+  const nOpen = open.length;
+  if (nOpen) todo.push(nOpen === 1 ? 'o factură fără plata aleasă' : nOpen + ' facturi fără plata aleasă');
+  const scanBtn = $('#hScan');
+  scanBtn.hidden = !FOLDER.ok;
+  scanBtn.disabled = SCANNING || BATCH_RUNNING;
+  scanBtn.textContent = SCANNING ? 'Citesc dosarul…' : FOLDER.set ? 'Verifică dosarul' : 'Alege dosarul cu facturi';
+  $('#hFileL').classList.toggle('primary', !FOLDER.ok);
+  let line = '';
+  if (HOME_NOTE && Date.now() - HOME_NOTE.at < 6 * 3600e3) line = HOME_NOTE.msg;
+  else if (FOLDER.ok && !FOLDER.set) line = 'Alege o dată dosarul în care salvezi facturile (de exemplu Download/Facturi). De atunci, facturile noi intră singure în coadă când deschizi aplicația.';
+  else if (FOLDER.set) line = srcState === 'perm' ? 'Telefonul cere voie să citesc dosarul: apasă „Verifică dosarul”.' : srcState === 'lost' ? 'Nu mai am acces la dosar. Alege-l din nou la Mai mult → Facturi și NIR-uri.' : 'Dosarul „' + esc(FOLDER.name) + '” ' + (S.srcLast ? 'a fost verificat ' + hhmm(S.srcLast) + '.' : 'nu a fost verificat încă.');
+  $('#hInvLine').innerHTML = line + (nOpen ? (line ? ' ' : '') + '<b>Cum le-ai plătit?</b>' : '');
+  $('#hInvLine').classList.toggle('bad', !!(HOME_NOTE && HOME_NOTE.kind === 'bad' && line === HOME_NOTE.msg));
+  $('#hPayList').innerHTML = open.slice(0, 6).map(x => '<li class="h-item"><span>' + esc(x.sup || 'Furnizor') + '<small>fact. ' + esc(x.no) + ' din ' + dm5(x.date) + ' · ' + esc(x.src) + '</small></span><span class="h-amt">' + m2(x.total) + '</span>' + qPayHtml(x).replace(/<span class="c-warn">[^<]*<\/span>/, '') + '</li>').join('');
+  $('#hPayList').hidden = !nOpen;
+  $('#hPayMore').innerHTML = (nOpen > 6 ? 'Și încă ' + (nOpen - 6) + ': apar aici după ce le alegi pe cele de sus. ' : '') +
+    (lat.length ? (lat.length === 1 ? 'O factură la termen neplătită' : lat.length + ' facturi la termen neplătite') + ' (' + m2(lat.reduce((a, x) => a + x.left, 0)) + ' lei). <button class="h-link" type="button" id="hLater">Am plătit una</button>' : '');
+  $('#hPayMore').hidden = !$('#hPayMore').innerHTML;
+  $('#hInvState').textContent = nOpen ? (nOpen === 1 ? '1 de ales' : nOpen + ' de ales') : 'la zi';
+  $('#hInv').className = 'h-block ' + (nOpen ? 'todo' : 'done');
+  // Z sales
+  const zd = zDays(), past = zd.filter(x => x < t);
+  $('#hZ').hidden = !ok;
+  if (ok) {
+    if (past.length) todo.push(past.length === 1 ? 'vânzările unei zile' : 'vânzările din ' + past.length + ' zile');
+    HZ_DATE = zd[0] || '';
+    const fold = HZ_DATE === t && !past.length && !HZ_TODAY;   // today's Z waits for the evening: one button until you want it
+    $('#hZForm').hidden = !HZ_DATE || fold; $('#hZTodayBox').hidden = !fold;
+    $('#hZState').textContent = past.length ? (past.length === 1 ? '1 zi' : past.length + ' zile') : 'la zi';
+    $('#hZ').className = 'h-block ' + (past.length ? 'todo' : 'done');
+    $('#hZLine').innerHTML = past.length ? 'Lipsesc vânzările din ' + (past.length <= 4 ? past.map(dm5).join(', ') : past.length + ' zile, de la ' + dm5(past[0])) + '. Le treci una după alta.'
+      : HZ_DATE ? 'Toate zilele până ieri sunt introduse. Azi o treci după ce scoți raportul Z.' : 'Toate zilele sunt introduse.';
+    if (HZ_DATE) {
+      const d = getDay(HZ_DATE), act = document.activeElement, pred = zPredict(HZ_DATE);
+      $('#hZDay').textContent = dayShort(HZ_DATE) + (HZ_DATE === t ? ' (azi)' : '');
+      if ($('#hZForm').dataset.day !== HZ_DATE) {
+        $('#hZForm').dataset.day = HZ_DATE;
+        [['hCash', d.cash], ['hCard', d.card], ['hSgr', d.sgr]].forEach(([id, v]) => { $('#' + id).value = v == null ? '' : fmtIn(v); });
+        $('#hZNo').value = d.zNo && !d.zAuto ? d.zNo : '';
+      }
+      $('#hZNo').placeholder = pred || 'de pe raport';
+      $('#hZNote').textContent = pred ? 'Numărul raportului Z se pune singur (' + pred + '). Îl scrii doar dacă pe raport e altul.' : 'Scrie numărul raportului Z o singură dată; de la el, zilele următoare îl primesc singure.';
+    }
+  }
+  // NIRs
+  const g = qGroups(), ready = g.ready.length, wait = g.wait.length, stopAt = g.ready.findIndex(x => !x.e || x.e.why), last = lastReg();
+  if (ready) todo.push(ready === 1 ? 'un NIR de emis' : ready + ' NIR-uri de emis');
+  $('#hNirState').textContent = ready ? ready + ' gata' : wait ? wait + ' în coadă' : 'la zi';
+  $('#hNir').className = 'h-block ' + (ready ? 'todo' : 'done');
+  $('#hNirLine').innerHTML = (ready ? (ready === 1 ? 'O factură a trecut de așteptare și poate primi NIR.' : ready + ' facturi au trecut de așteptare și pot primi NIR.') +
+      (stopAt >= 0 ? ' La ' + esc(invLabel(g.ready[stopAt].q.inv)) + ' trebuie să decizi ceva; lotul se oprește la ea și ți-o arată.' : '') : 'Nicio factură gata de NIR.') +
+    (wait ? ' ' + (wait === 1 ? 'O factură așteaptă' : wait + ' facturi așteaptă') + (isoOk(g.wait[0].q.inv.date) ? '; următoarea primește NIR pe ' + roDate(readyDate(g.wait[0].q.inv.date)) : '') + '.' : '') +
+    (last ? ' Ultimul NIR: nr. ' + last.nr + ' din ' + roDate(last.date) + '.' : '');
+  $('#hBatch').hidden = !ready; $('#hBatch').disabled = BATCH_RUNNING || HBUSY;
+  $('#hBatch').textContent = BATCH_RUNNING || HBUSY ? 'Emit NIR-urile…' : 'Emite NIR-urile (' + ready + ')';
+  $('#hQueue').hidden = !QUEUE.length;
+  $('#hAsk').hidden = !(HASK && ready);
+  // the monthly report, when a month is done
+  const due = typeof dueMonth === 'function' ? dueMonth() : '';
+  $('#hRep').hidden = !due;
+  if (due) {
+    const n = monthRecs(due).length, email = S.repEmail.trim();
+    $('#hRepLine').textContent = 'NIR-urile din ' + monthName(due) + ' (' + n + '), registrul de casă și raportul de gestiune ale lunii sunt gata pentru contabilă.' + (email ? ' Pleacă la ' + email + '.' : ' Adaugă întâi adresa de email a contabilei.');
+    $('#hRepGo').textContent = email ? 'Trimite raportul' : 'Adaugă emailul';
+    $('#hRepGo').dataset.ym = due; $('#hRepDone').dataset.ym = due;
+    todo.push('raportul lunar');
+  }
+  // the money, as far as you have entered it
+  const ls = ok ? lastSalesDay() : '';
+  if (ls) { const hc = cashBook(ls).get(ls), he = estBook(ls).get(ls); $('#hMoney').innerHTML = '<span>La ' + dm5(ls) + ' ai în casă <b>' + m2(hc.fin) + '</b> lei, iar marfa din magazin e cam <b>' + m2(he.estFin) + '</b> lei.</span><button class="h-link" type="button" data-goto="gest">Zi de zi</button>'; }
+  $('#hMoney').hidden = !ls;
+  // the summary at the top
+  const hs = $('#hSum');
+  hs.textContent = !ok ? 'Pune întâi de unde pornesc casa și marfa.' : todo.length ? 'De făcut: ' + todo.join(', ') + '.' : 'Totul e la zi.';
+  hs.className = ok && !todo.length ? 'ok' : '';
+}
+$('#hStSave').addEventListener('click', () => {
+  const date = $('#hStDate').value, stock = leiNum($('#hStStock').value), cash = leiNum($('#hStCash').value);
+  if (!isoOk(date)) { toast('Alege ziua de start.', 'bad'); return; }
+  if (stock == null || cash == null) { toast('Scrie valoarea mărfii și numerarul din casă (0 dacă e cazul).', 'bad'); return; }
+  S.start = {date, stock: round2(stock), cash: round2(cash)}; saveStore(); renderHome();
+  toast('Gata: pornesc din ' + roDate(date) + ' cu marfă ' + m2(S.start.stock) + ' lei și casă ' + m2(S.start.cash) + ' lei.', 'ok');
+});
+$('#hScan').addEventListener('click', () => { if (FOLDER.set) scanSource(true); else $('#btnSrcPick').click(); });
+$('#hFile').addEventListener('change', e => { const f = Array.from(e.target.files || []); e.target.value = ''; if (f.length) { toast('Citesc ' + (f.length > 1 ? f.length + ' fișiere' : 'factura') + '…', 'ok'); onFile(f); } });
+$('#hPayList').addEventListener('click', async e => { const p = e.target.closest('[data-qpay]'); if (p) await payBtn(p, 'home'); });
+$('#hPayMore').addEventListener('click', e => { if (e.target.closest('#hLater')) { showTab('casa'); $('#cLaterBtn').click(); } });
+async function hSaveZ(closed){
+  const date = HZ_DATE; if (!isoOk(date)) return;
+  const d = getDay(date);
+  if (closed) { Object.assign(d, {closed: true, autoClosed: false, open: false, cash: 0, card: 0, sgr: 0, zNo: '', zAuto: false}); }
+  else {
+    const cash = leiNum($('#hCash').value), card = leiNum($('#hCard').value), sgrT = $('#hSgr').value.trim(), sgr = sgrT ? leiNum(sgrT) : 0, zT = $('#hZNo').value.trim();
+    if (cash == null || card == null) { toast('Scrie numerarul și cardul din raportul Z (0 dacă n-ai avut).', 'bad'); return; }
+    if (sgr == null || cash < 0 || card < 0 || sgr < 0) { toast('Verifică sumele: trebuie să fie numere pozitive.', 'bad'); return; }
+    Object.assign(d, {cash: round2(cash), card: round2(card), sgr: round2(sgr), closed: false, autoClosed: false, open: true});
+    if (zT && zT !== zPredict(date)) { d.zNo = zT; d.zAuto = false; } else if (!d.zNo || d.zAuto) { d.zNo = ''; d.zAuto = false; }
+  }
+  await putDay(d); await renumberZ();
+  const nd = getDay(date), bad = !closed && sgrBad(nd);
+  const next = zDays()[0];
+  $('#hZForm').dataset.day = '';
+  renderHome(); renderCasa();
+  toast(closed ? dayShort(date) + ': magazin închis, nu consumă număr de raport.' :
+    dayShort(date) + ' salvată: numerar ' + m2(nd.cash) + ', card ' + m2(nd.card) + (nd.sgr ? ', ambalaj ' + m2(nd.sgr) : '') + (nd.zNo ? ', Z nr. ' + nd.zNo : '') + '.' + (bad ? ' Atenție: ' + sgrBadTxt(nd) + '.' : ''), bad ? 'bad' : 'ok');
+  if (next && next !== date) setTimeout(() => { const el = $('#hCash'); if (el) el.focus({preventScroll: true}); }, 50);
+}
+$('#hZSave').addEventListener('click', () => hSaveZ(false));
+$('#hZToday').addEventListener('click', () => { HZ_TODAY = true; renderHome(); setTimeout(() => $('#hCash').focus(), 50); });
+$('#hZClosed').addEventListener('click', () => hSaveZ(true));
+['hCash', 'hCard', 'hSgr', 'hZNo'].forEach(id => $('#' + id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const ids = ['hCash', 'hCard', 'hSgr', 'hZNo'], i = ids.indexOf(id); if (i < ids.length - 1) $('#' + ids[i + 1]).focus(); else hSaveZ(false); } }));
+$('#hBatch').addEventListener('click', () => {
+  if (DIR.set) DIR.grant();
+  const g = qGroups(), lastD = g.ready.length ? g.ready[g.ready.length - 1].q.inv.date : '';
+  $('#hAskText').innerHTML = 'Ai pus în coadă <b>toate</b> facturile din Oblio până azi? Emit ' + g.ready.length + (g.ready.length === 1 ? ' factură' : ' facturi') + ' cu date până la ' + roDate(lastD) + ', în ordinea datei. O factură din aceste zile adusă mai târziu nu mai primește număr în ordine.';
+  HASK = true; renderHome();
+});
+$('#hAskNo').addEventListener('click', () => { HASK = false; renderHome(); toast('Bine. Pune facturile din Oblio în dosar sau încarcă-le, apoi apasă din nou „Emite NIR-urile”.', 'ok'); });
+$('#hAskGo').addEventListener('click', async () => {
+  HASK = false; HBUSY = true; renderHome();
+  try { await runBatch(); } finally { HBUSY = false; }
+  const msg = $('#toast').textContent, cls = $('#toast').className;
+  if (S.batch) {   // it stopped at an invoice that needs you: show it
+    showTab('nir'); $('#toast').textContent = msg; $('#toast').className = cls;
+    setTimeout(() => $('#check').scrollIntoView({block: 'start', behavior: 'smooth'}), 60);
+  } else renderHome();
+});
+$('#hQueue').addEventListener('click', () => { showTab('nir'); setTimeout(() => $('#qSec').scrollIntoView({block: 'start', behavior: 'smooth'}), 60); });
+$('#hRepGo').addEventListener('click', e => { if (S.repEmail.trim()) sendReport(e.target.dataset.ym); else repSetup(); });
+$('#hRepDone').addEventListener('click', e => { markSent(e.target.dataset.ym); renderHome(); toast('Am notat ' + monthName(e.target.dataset.ym) + ' ca trimis.', 'ok'); });
+loadDays().then(() => { renderCasa(); renderGest(); renderQueue(); renderHome(); });
 
 /* ---------------- runtime capabilities (only inside Claude) ---------------- */
 if (window.claude && typeof window.claude.use === 'function') {
@@ -3840,11 +4122,12 @@ ${[
 </Invoice>`;
 
 
-window.nirRapid = {calc: inv => compute(inv), exportXlsx: () => buildXlsx(currentModel()), exportPdf: () => buildNirPdf(currentModel()), state: () => ({S, C, REG, PRICES, QUEUE, DAYS}), dates: {readyDate, spvDeadline, isWorkday}, reload: async () => { await loadRegister(); render(); renderCasa(); renderGest(); },
+window.nirRapid = {tab: t => showTab(t), calc: inv => compute(inv), exportXlsx: () => buildXlsx(currentModel()), exportPdf: () => buildNirPdf(currentModel()), state: () => ({S, C, REG, PRICES, QUEUE, DAYS}), dates: {readyDate, spvDeadline, isWorkday}, reload: async () => { await loadRegister(); render(); renderCasa(); renderGest(); },
   books: to => { const c = cashBook(to), g = stockBook(to); return [...g.keys()].map(d => [d, c.get(d), (({prev, nir, pv, out, fin, gap, final}) => ({prev, nir, pv, out, fin, gap, final}))(g.get(d))]); }, payables: () => payables(), backup: () => backupData(),
   est: to => [...estBook(to)].map(([d, x]) => [d, x.estFin, x.qVal, x.qN, x.qBad, x.fin]), qest: () => QUEUE.map(q => [q.key, nirDateFor(q.inv), (estimate(q) || {}).val ?? null]),
   pdf: async (kind, from, to) => { const b = kind === 'cash' ? await buildCashPdf(from, to, false) : await buildGestPdf(from, to, false); const u8 = new Uint8Array(await b.arrayBuffer()); let s = ''; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(s); }};
 if (!S.company) $('#settings').open = true;
+showTab('home');
 try { applyInvoice(parseUBL(EXAMPLE), true); } catch (e) { setStatus('Exemplul nu a putut fi încărcat.', 'bad'); }
 loadRegister().then(loadQueue).then(async () => {
   // opening the app shows the oldest invoice still waiting, instead of the example
