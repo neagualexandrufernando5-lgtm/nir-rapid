@@ -301,6 +301,25 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
 .h-foot{color:var(--ink-2);font-size:.92rem;padding:0 4px;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
 .h-foot b{color:var(--ink);font:500 .95rem var(--f-num)}
 details.help{border-top:1px solid var(--rule);padding-top:10px}
+.reorder{display:grid;gap:8px;padding:12px;margin:0 16px 12px;border-radius:10px;background:var(--amber-soft);font-size:.88rem}
+.reorder p{margin:0}
+.reorder .reg-actions{margin:0}
+.h-pre{display:grid;gap:12px;padding:14px;border-radius:10px;background:var(--paper);border:1px solid var(--rule)}
+.h-pre h4{margin:0;font:600 1rem var(--f-body)}
+.h-pre input[type=text],.h-pre input[type=date]{background:var(--sheet)}
+.h-sups{display:grid;gap:6px}
+.h-sup{display:block;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--rule);border-radius:10px;background:var(--sheet);font:500 .95rem var(--f-body);color:var(--ink);cursor:pointer}
+.h-sup small{display:block;color:var(--ink-2);font-size:.78rem}
+.h-sup.new{border-style:dashed;color:var(--carbon)}
+.h-picked{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;background:var(--sheet);border:1px solid var(--carbon)}
+.h-picked b{font-weight:600}
+.h-pre .seg{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.h-pre .seg label{position:relative;background:var(--sheet);padding:12px 6px;font-size:.95rem;justify-content:center;white-space:nowrap}
+.h-pre .seg input{position:absolute;opacity:0;width:1px;height:1px}
+.h-pre .seg label:has(input:checked){background:var(--carbon);border-color:var(--carbon);color:var(--on-carbon)}
+.h-pre .seg label:has(input:focus-visible){outline:2px solid var(--carbon);outline-offset:2px}
+.h-wait{color:var(--ink-2);font-size:.85rem;margin:2px 0 0}
+.h-wait.bad{color:var(--bad)}
 details.help summary{cursor:pointer;font:600 .88rem var(--f-body);color:var(--carbon);padding:6px 0}
 </style>
 
@@ -341,8 +360,23 @@ details.help summary{cursor:pointer;font:600 .88rem var(--f-body);color:var(--ca
       <p class="h-line" id="hInvLine"></p>
       <ol class="h-list" id="hPayList"></ol>
       <p class="h-line" id="hPayMore"></p>
+      <ol class="h-list" id="hPreList" hidden></ol>
+      <div class="h-pre" id="hPreBox" hidden>
+        <h4>Marfă primită, factura nu e încă în SPV</h4>
+        <label class="f">Furnizorul: scrie o parte din nume sau din CUI<input type="text" id="hPreQ" autocomplete="off" enterkeyhint="search" placeholder="ex. elit sau 1234"></label>
+        <div class="h-sups" id="hPreSups"></div>
+        <div class="h-picked" id="hPrePicked" hidden><b id="hPreSup"></b><button class="h-link" id="hPreRe" type="button">Alt furnizor</button></div>
+        <label class="f" id="hPreNameL" hidden>Numele furnizorului (opțional)<input type="text" id="hPreName" autocomplete="off"></label>
+        <label class="f" id="hPreCuiL" hidden>CUI-ul furnizorului, de pe factură (ajută la potrivire)<input type="text" id="hPreCui" inputmode="numeric" autocomplete="off"></label>
+        <label class="f">Suma de pe factură (lei)<input type="text" id="hPreAmt" inputmode="decimal" autocomplete="off" placeholder="ex. 1.234,50"></label>
+        <div class="seg" role="radiogroup" aria-label="Cum ai plătit"><label><input type="radio" name="hPreM" value="cash">Cash</label><label><input type="radio" name="hPreM" value="card">Card</label><label><input type="radio" name="hPreM" value="later">La termen</label></div>
+        <label class="f">Ziua în care ai primit marfa<input type="date" id="hPreDate"></label>
+        <label class="f">Nr. facturii, dacă îl ai pe hârtie (opțional)<input type="text" id="hPreNo" autocomplete="off"></label>
+        <div class="h-acts"><button class="btn primary" id="hPreSave" type="button">Salvează</button><button class="h-link" id="hPreCancel" type="button">Renunță</button></div>
+      </div>
       <div class="h-acts">
-        <button class="btn primary" id="hScan" type="button">Verifică dosarul</button>
+        <button class="btn primary" id="hPreOpen" type="button">Am primit marfă</button>
+        <button class="btn" id="hScan" type="button">Verifică dosarul</button>
         <label class="btn" id="hFileL" for="hFile">Încarcă facturi<input class="vh" id="hFile" type="file" multiple accept=".pdf,application/pdf,.xml,.zip,text/xml,application/xml,application/zip,application/x-zip-compressed"></label>
       </div>
     </div>
@@ -504,6 +538,7 @@ details.help summary{cursor:pointer;font:600 .88rem var(--f-body);color:var(--ca
   <details class="settings" id="regBox">
     <summary><b>Registru NIR</b><span id="regSum"></span></summary>
     <div class="reg">
+      <div class="reorder" id="reorderBox" hidden></div>
       <ol class="reg-list" id="regList"></ol>
       <div class="rep" id="repBox">
         <h4>Raport lunar pe email</h4>
@@ -1264,6 +1299,7 @@ const IDB = (() => {
     put: (store, v) => run(store, 'readwrite', s => s.put(v)),
     putMany: (store, list) => run(store, 'readwrite', s => { list.forEach(v => s.put(v)); return null; }),
     del: (store, key) => run(store, 'readwrite', s => s.delete(key)),
+    swap: (store, dels, puts) => run(store, 'readwrite', s => { dels.forEach(k => s.delete(k)); puts.forEach(v => s.put(v)); return null; }),
     clear: store => run(store, 'readwrite', s => s.clear())
   };
 })();
@@ -1541,7 +1577,7 @@ function compute(inv){
     else if (last && n < last.nr) hard.push('Numărul ' + n + ' e mai mic decât ultimul NIR emis (' + last.nr + '). Numerotarea trebuie să crească. Următorul liber: ' + nextNr() + '.');
     else if (last && n > last.nr + 1) soft.push('Sari peste numerele ' + (last.nr + 1) + (n > last.nr + 2 ? '–' + (n - 1) : '') + '. Golurile din numerotare trebuie să aibă o explicație.');
     const lastIn = REG.slice().reverse().find(r => !r.stornoOf);   // a storno carries the day it was made, not a reception date
-    if (lastIn && S.nirDate < lastIn.date) soft.push('Data NIR-ului (' + roDate(S.nirDate) + ') e mai veche decât a ultimului NIR emis (nr. ' + lastIn.nr + ' din ' + roDate(lastIn.date) + '): factura a venit după ce zilele următoare au primit deja NIR. Numărul nou (' + S.nirNo + ') va ieși în afara ordinii datelor; confirmă doar dacă ești de acord.');
+    if (lastIn && S.nirDate < lastIn.date) soft.push('Data NIR-ului (' + roDate(S.nirDate) + ') e mai veche decât a ultimului NIR emis (nr. ' + lastIn.nr + ' din ' + roDate(lastIn.date) + '): factura a venit după ce zilele următoare au primit deja NIR. Numărul nou (' + S.nirNo + ') va ieși în afara ordinii datelor; confirmă doar dacă ești de acord. După emitere o poți pune la locul ei: Mai mult → Registru NIR → „Renumerotează”.');
     if (!isoOk(inv.date)) soft.push('Data facturii nu a fost citită, deci nu știu când se închide ziua ei și unde intră NIR-ul în ordine. Verifică data pe factură.');
     else if (!dayClosed(inv.date)) soft.push('Factura e din ' + roDate(inv.date) + ', iar ziua ei se închide pe ' + roDate(readyDate(inv.date)) + '. Până atunci furnizorii pot încă trimite în SPV facturi din aceeași zi sau mai vechi; dacă emiți acum, ordinea numerelor se poate strica. Las-o în coadă.');
     const older = isoOk(inv.date) && !S.estimating ? QUEUE.filter(q => q.key !== invKey(inv) && isoOk(q.inv.date) && q.inv.date < inv.date) : [];
@@ -1933,7 +1969,7 @@ async function onFile(files){
     msg = 'Factura ' + esc(invLabel(inv)) + ' a fost citită' + (rows ? ': ' + rows : '') + '. ';
     if (r.done.length) msg += 'Are deja NIR nr. ' + r.done[0].rec.nr + '.';
     else if (!String(inv.number || '').trim()) msg += 'Fără număr de factură nu intră în coadă.';
-    else msg += (r.again.length ? 'Era deja în coadă. ' : 'A intrat în coadă. ') + (dayClosed(inv.date) ? 'Ziua ei s-a închis: poate primi NIR acum.' : isoOk(inv.date) ? 'Primește NIR din ' + roDate(readyDate(inv.date)) + ', după ce se închide ziua ei.' : '') + (inv.docType === 'CreditNote' ? '' : ' Cum ai plătit-o alegi direct la ea, în coadă.');
+    else msg += (r.again.length ? 'Era deja în coadă. ' : 'A intrat în coadă. ') + (dayClosed(inv.date) ? 'Ziua ei s-a închis: poate primi NIR acum.' : isoOk(inv.date) ? 'Primește NIR din ' + roDate(readyDate(inv.date)) + ', după ce se închide ziua ei.' : '') + (inv.docType === 'CreditNote' ? '' : ' Cum ai plătit-o alegi direct la ea.');
   } else {
     msg = 'Am citit ' + got.length + ' facturi: ' + [r.added.length && r.added.length + ' noi în coadă', r.again.length && r.again.length + ' erau deja în coadă', r.done.length && r.done.length + ' au deja NIR', r.skipped && r.skipped + ' fără număr de factură'].filter(Boolean).join(', ') + '.';
   }
@@ -1974,6 +2010,7 @@ async function enqueue(items){
     EST.delete(key);
     try { await QDB.put(item); if (pdf) await QDB.filePut(key, pdf); } catch (e) {}
   }
+  if (out.added.length || out.again.length) await matchPre();
   return out;
 }
 function qSorted(){ return QUEUE.slice().sort((a, b) => byInvDate(a.inv, b.inv)); }
@@ -2785,6 +2822,10 @@ const DIR = (() => {
       const mdir = monthDir(ym, pre), dir = mdir ? await main.getDirectoryHandle(mdir, {create: true}) : main;
       const fh = await dir.getFileHandle(filename, {create: true}); const w = await fh.createWritable(); try { await w.write(blob); await w.close(); } catch (e) { try { await w.abort(); } catch (x) {} throw e; }
       return (isMain() ? handle.name : mainName()) + (mdir ? ' / ' + mdir : '');
+    },
+    async remove(filename, ym, pre){
+      if (!handle) return false;
+      try { const main = isMain() ? handle : await handle.getDirectoryHandle(mainName()); const mdir = monthDir(ym, pre), dir = mdir ? await main.getDirectoryHandle(mdir) : main; await dir.removeEntry(filename); return true; } catch (e) { return false; }
     }
   };
 })();
@@ -2913,7 +2954,70 @@ async function rollbackPrices(rec){
     } catch (e) {}
   }
 }
+/* ---- renumbering: a late invoice put back in the order of the dates ---- */
+// from the first NIR whose date is later than a NIR after it, the same numbers are handed out again in date order
+function reorderPlan(){
+  const list = REG.slice().sort((a, b) => a.nr - b.nr), n = list.length;
+  if (n < 2) return null;
+  const suf = new Array(n + 1).fill('9999-12-31');
+  for (let i = n - 1; i >= 0; i--) suf[i] = !list[i].stornoOf && list[i].date < suf[i + 1] ? list[i].date : suf[i + 1];
+  let start = -1;
+  for (let i = 0; i < n - 1; i++) if (!list[i].stornoOf && list[i].date > suf[i + 1]) { start = i; break; }
+  if (start < 0) return null;
+  const part = list.slice(start), nums = part.map(r => r.nr);
+  const order = part.slice().sort((a, b) => a.date.localeCompare(b.date) || a.nr - b.nr);
+  const moves = order.map((r, i) => ({rec: r, from: r.nr, to: nums[i]})).filter(m => m.from !== m.to);
+  const sent = [...new Set(part.map(r => monthOf(r.date)))].filter(m => S.sent && S.sent[m]);
+  const why = part.some(r => r.stornoOf || r.status !== 'emis') ? 'printre ele e o stornare, iar stornarea rămâne legată de numărul NIR-ului stornat'
+    : sent.length ? 'raportul pe ' + sent.map(monthName).join(', ') + ' a plecat deja la contabilă, iar numerele trimise nu se mai schimbă' : '';
+  return {part, moves, why};
+}
+let reArm = false;
+function renderReorder(){
+  const box = $('#reorderBox'), plan = reorderPlan();
+  box.hidden = !plan || !plan.moves.length; if (box.hidden) return;
+  const early = plan.moves.filter(m => m.to < m.from), lst = plan.moves.map(m => m.from + ' devine ' + m.to).join(', ');
+  box.innerHTML = '<p><b>Numerele NIR nu mai urmează datele.</b> ' + early.map(m => 'NIR-ul ' + m.from + ' (' + esc(m.rec.supName || '') + ', ' + roDate(m.rec.date) + ')').join(', ') + (early.length > 1 ? ' au' : ' are') + ' o dată mai veche decât NIR-urile cu numere mai mici.</p>' +
+    (plan.why ? '<p>Nu le renumerotez: ' + plan.why + '. Lasă-le așa; fiecare NIR își păstrează data recepției.</p>'
+      : '<p>Le pot pune în ordinea datelor: ' + lst + '. Fac întâi o copie de siguranță, apoi salvez din nou PDF-urile cu numerele noi. Fă asta doar dacă nu le-ai dat încă contabilei.</p>' +
+        '<div class="reg-actions"><button class="btn' + (reArm ? ' danger' : '') + '" type="button" id="btnReorder">' + (reArm ? 'Confirm: renumerotează' : 'Renumerotează') + '</button></div>');
+}
+$('#reorderBox').addEventListener('click', async e => {
+  if (!e.target.closest('#btnReorder')) return;
+  if (!reArm) { reArm = true; renderReorder(); setTimeout(() => { if (reArm) { reArm = false; renderReorder(); } }, 6000); return; }
+  reArm = false; if (DIR.set) DIR.grant();
+  await applyReorder();
+});
+async function applyReorder(){
+  const plan = reorderPlan(); if (!plan || plan.why || !plan.moves.length || busy || BATCH_RUNNING) return;
+  if (!STORE_OK) { toast('Browserul nu păstrează registrul aici.', 'bad'); return; }
+  // a copy first: if it cannot be saved, nothing changes
+  let saved = false;
+  try { saved = await saveBlob('NIR-rapid-copie-inainte-de-renumerotare_' + today() + '.json', new Blob([JSON.stringify(backupData())], {type: 'application/json'})); } catch (e) { saved = false; }
+  if (!saved) { toast('Copia de siguranță nu s-a putut salva, așa că nu am schimbat nimic.', 'bad'); return; }
+  SAVE_NOTE = '';
+  const map = new Map(plan.moves.map(m => [m.from, m.to])), at = new Date().toISOString();
+  const old = plan.moves.map(m => [modelFileName(m.rec.model, 'pdf'), m.rec.date]);
+  const puts = plan.moves.map(m => { const r = JSON.parse(JSON.stringify(m.rec)); r.nr = m.to; r.model.nr = String(m.to); r.renumbered = (r.renumbered || []).concat([{from: m.from, to: m.to, at}]); return r; });
+  const pr = [...PRICES.values()].filter(p => map.has(p.nr)).map(p => Object.assign({}, p, {nr: map.get(p.nr)}));
+  busy = true;
+  try {
+    try { await IDB.swap('nir', plan.moves.map(m => m.from), puts); if (pr.length) await IDB.putMany('prices', pr); }
+    catch (e) { await loadRegister(); render(); toast('Renumerotarea nu a reușit; registrul a rămas cum era.', 'bad'); return; }
+    await loadRegister(); BUY = null; EST.clear(); repCache = null;
+    // a stock report already given for those days shows as changed
+    for (const date of new Set(plan.moves.map(m => m.rec.date))) { const d = getDay(date); if (d.gestSig) { d.gestSig = 'renumerotat'; await putDay(d); } }
+    let removed = 0, pdfs = 0;
+    for (const [name, date] of old) if (DIR.set && await DIR.remove(name, date)) removed++;
+    for (const r of puts.slice().sort((a, b) => a.nr - b.nr)) { try { if (await downloadModel(r.model, 'pdf', r.invKey)) pdfs++; } catch (e) {} }
+    const note = SAVE_NOTE; SAVE_NOTE = '';
+    toast('Gata: ' + plan.moves.map(m => m.from + ' a devenit ' + m.to).join(', ') + '. Am salvat din nou ' + pdfs + (pdfs === 1 ? ' PDF' : ' PDF-uri') + ' cu numerele noi' +
+      (DIR.set ? (removed ? ' și am șters din dosar ' + (removed === 1 ? 'fișierul vechi' : 'cele ' + removed + ' fișiere vechi') : '') + '.' : '. Șterge din Descărcări PDF-urile vechi: ' + old.map(o => o[0]).join(', ') + '.') +
+      ' Copia de dinainte e salvată. Dacă ai dat deja contabilei aceste NIR-uri sau raportul de gestiune al acelor zile, dă-i variantele noi.' + (note ? ' ' + note : ''), 'ok');
+  } finally { busy = false; render(); renderRegister(); renderGest(); renderHome(); }
+}
 function renderRegister(){
+  renderReorder();
   renderReport();
   const box = $('#regList'), last = lastReg();
   $('#regSum').textContent = REG.length ? REG.length + ' NIR-uri · ultimul nr. ' + last.nr + ' din ' + roDate(last.date) : (STORE_OK ? 'gol · primul NIR primește nr. ' + nextNr() : 'browserul nu permite salvarea');
@@ -3339,10 +3443,13 @@ function cashGap(date, d, qDates, open){
   if (!dayClosed(date)) return 'facturile acestei zile pot apărea în SPV până pe ' + roDate(spvDeadline(date)) + ' și poate lipsi încă o plată la livrare; ziua se închide pe ' + roDate(readyDate(date));
   const q = qDates.get(date) || 0;
   if (q) return (q > 1 ? q + ' facturi din ziua asta sunt' : 'o factură din ziua asta e') + ' încă în coadă, fără NIR';
+  const pw = preWait(d); if (pw) return pw;
   const o = open.get(date) || 0;
   if (o) return (o > 1 ? o + ' facturi din ziua asta nu au' : 'o factură din ziua asta nu are') + ' plata aleasă (cash, card sau la termen)';
   return '';
 }
+// goods received with an invoice that is not in SPV yet: the day waits for it
+function preWait(d){ const pr = (d.pre || []).filter(p => !p.key); return !pr.length ? '' : (pr.length > 1 ? pr.length + ' facturi primite pe hârtie nu au' : 'factura de la ' + pr[0].sup + ', primită pe hârtie, nu a') + ' apărut încă în SPV'; }
 function waitText(b, date){ const w = b.wait; return !w ? b.gap : w.date === date ? w.gap : 'ziua de ' + roDate(w.date) + ' nu e definitivă (' + w.gap + ')'; }
 // NIRs of a day at sale price with VAT; a storno carries minus
 function nirDay(date){ return REG.filter(r => r.date === date).sort((a, b) => a.nr - b.nr); }
@@ -3356,6 +3463,7 @@ function dayGap(date, qDates){
     const q = qDates ? qDates.get(date) || 0 : QUEUE.filter(x => x.inv.date === date).length;
     if (q) return (q > 1 ? q + ' facturi din ziua asta sunt' : 'o factură din ziua asta e') + ' încă în coadă, fără NIR';
   }
+  const pw = preWait(d); if (pw) return pw;
   return '';
 }
 // stock at sale price: previous final + NIRs of the day ± price changes − sales without SGR; final only if every day up to it is
@@ -3477,7 +3585,7 @@ function renderCasa(){
     const card = kind === 'out' && !isCash(x);
     return '<li class="c-row"><span>' + esc(x.label) + (card ? '<small>card sau transfer · nu intră în registrul de casă</small>' : '') +
       (x.doc ? '<small>Document: ' + esc(x.doc) + '</small>' : '') +
-      (x.kind === 'inv' && !known.has(x.key) ? '<small class="c-warn">factura nu mai e în coadă sau în registru</small>' : '') + '</span><span class="c-amt">' + m2(x.amount) + '</span>' +
+      (x.kind === 'inv' && !known.has(x.key) ? '<small class="c-warn">' + (String(x.key).startsWith('pre:') ? 'factura nu a apărut încă în SPV; se leagă singură când apare' : 'factura nu mai e în coadă sau în registru') + '</small>' : '') + '</span><span class="c-amt">' + m2(x.amount) + '</span>' +
       '<button type="button" class="chip' + (cArm === kind + x.id ? ' bad' : '') + '" data-cdel="' + kind + ':' + x.id + '">' + (cArm === kind + x.id ? 'Confirm' : 'Șterge') + '</button></li>';
   };
   $('#outList').innerHTML = d.out.map(x => row(x, 'out')).join('');
@@ -3658,7 +3766,7 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-cdel]'); if (!b) return;
   const [kind, id] = b.dataset.cdel.split(':');
   if (cArm !== kind + id) { cArm = kind + id; renderCasa(); setTimeout(() => { if (cArm === kind + id) { cArm = null; renderCasa(); } }, 6000); return; }
-  cArm = null; await editDay(d => { d[kind] = d[kind].filter(x => x.id !== id); }); toast('Am șters rândul.', 'ok');
+  cArm = null; await editDay(d => { const gone = d[kind].find(x => x.id === id); d[kind] = d[kind].filter(x => x.id !== id); if (gone && gone.preId) d.pre = (d.pre || []).filter(p => p.id !== gone.preId); }); renderHome(); toast('Am șters rândul.', 'ok');
 });
 $('#btnCasaPdf').addEventListener('click', async () => {
   if (!startSet()) { toast('Pune întâi soldurile de pornire, la „Gestiune”.', 'bad'); return; }
@@ -3912,6 +4020,128 @@ document.addEventListener('click', async e => {
 });
 DIR.load().then(renderCgDir).catch(() => {});
 
+
+/* ---- marfă primită înainte ca factura să apară în SPV ---- */
+// you say it the day the goods come: supplier, amount, how you paid; the invoice is linked when it arrives (same CUI, same amount or same number)
+let PRE_SUP = null, PRE_NOTE = null, MATCHING = false, preArm = null;
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const normNo = v => String(v || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
+const supCore = v => norm(v).replace(/\b(s\.?r\.?l\.?|s\.?a\.?|srl|sa|s c s|snc|pfa|ii|if|com|impex|prod|serv|trade|distrib(ution)?|group)\b/g, ' ').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+function supLike(a, b){ const x = supCore(a), y = supCore(b); return !!x && !!y && (x.includes(y) || y.includes(x)); }
+// every supplier the app has seen: NIR register, queue, what you typed before
+function supList(){
+  const m = new Map(), add = (cui, name) => { const c = digits(cui), n = String(name || '').trim(); if (!c && !n) return; const k = c || 'n:' + supCore(n); if (!m.has(k) || (!m.get(k).name && n)) m.set(k, {cui: c, name: n || 'CUI ' + c}); };
+  REG.forEach(r => add(r.supCui, r.supName));
+  QUEUE.forEach(q => add(q.inv.supplier && q.inv.supplier.cui, q.inv.supplier && q.inv.supplier.name));
+  DAYS.forEach(d => (d.pre || []).forEach(p => add(p.cui, p.sup)));
+  return [...m.values()].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+}
+function supSearch(q){
+  const t = norm(q), dg = digits(q); if (!t) return [];
+  const all = supList(), hit = [];
+  all.forEach(x => { const n = norm(x.name); let r = -1;
+    if (dg.length >= 2 && /^\d+$/.test(t.replace(/^ro/, '').replace(/\s/g, ''))) { if (x.cui.includes(dg)) r = x.cui.startsWith(dg) ? 0 : 1; }
+    else if (n.startsWith(t)) r = 0; else if (n.split(/[^a-z0-9]+/).some(w => w.startsWith(t))) r = 1; else if (n.includes(t)) r = 2;
+    if (r >= 0) hit.push([r, x]); });
+  return hit.sort((a, b) => a[0] - b[0] || a[1].name.localeCompare(b[1].name, 'ro')).slice(0, 6).map(h => h[1]);
+}
+function prePending(){ const out = []; DAYS.forEach(d => (d.pre || []).forEach(p => { if (!p.key) out.push(Object.assign({date: d.date}, p)); })); return out.sort((a, b) => a.date.localeCompare(b.date)); }
+// the invoices that could be this one: same supplier, dated from 3 days before the goods to 10 days after, not paid or chosen yet
+function preCands(p){
+  const cui = digits(p.cui), no = normNo(p.no), lo0 = addDays(p.date, -3), lo = startSet() && S.start.date > lo0 ? S.start.date : lo0, hi = addDays(p.date, 10), dd = x => Math.abs(Date.parse(x.date) - Date.parse(p.date));
+  const all = invStatus().filter(x => x.total > 0.004 && !x.pays.length && !x.later && isoOk(x.date) && x.date >= lo && x.date <= hi && (cui ? x.key.split('|')[0] === cui : supLike(x.sup, p.sup)));
+  let exact = null;
+  if (no) { const byNo = all.filter(x => normNo(x.no) === no); if (byNo.length === 1) exact = byNo[0]; }
+  if (!exact) { const am = all.filter(x => Math.abs(x.total - p.amount) < 0.005).sort((a, b) => dd(a) - dd(b)); if (am.length === 1 || (am.length > 1 && dd(am[0]) < dd(am[1]))) exact = am[0]; }
+  return {exact, near: exact ? [] : all.sort((a, b) => dd(a) - dd(b)).slice(0, 2)};
+}
+async function linkPre(p, x){
+  const d = getDay(p.date), pp = (d.pre || []).find(y => y.id === p.id); if (!pp || pp.key) return '';
+  Object.assign(pp, {key: x.key, invNo: x.no, invDate: x.date, linkedAt: new Date().toISOString()});
+  if (p.method === 'later') { S.later = Object.assign({}, S.later, {[x.key]: p.date}); saveStore(); }
+  else { const o = d.out.find(y => y.preId === p.id); if (o) Object.assign(o, {key: x.key, invNo: x.no, invDate: x.date, label: 'Plată factura ' + x.no + ' din ' + roDate(x.date) + ', ' + x.sup, doc: o.doc || x.no}); }
+  await putDay(d);
+  return 'Factura ' + x.no + ' de la ' + x.sup + ' a apărut și am trecut-o ' + (p.method === 'cash' ? 'plătită cash pe ' + dm5(p.date) : p.method === 'card' ? 'plătită cu cardul pe ' + dm5(p.date) : 'la termen') + ', cum ai notat la primirea mărfii.';
+}
+async function matchPre(){
+  if (MATCHING) return; MATCHING = true; const notes = [];
+  try { for (const p of prePending()) { const c = preCands(p); if (c.exact) { const m = await linkPre(p, c.exact); if (m) notes.push(m); } } }
+  finally { MATCHING = false; }
+  if (notes.length) { PRE_NOTE = {msg: notes.join(' '), at: Date.now()}; payChanged(); }
+}
+function renderPre(){
+  const pend = prePending(), t = today();
+  $('#hPreList').hidden = !pend.length;
+  $('#hPreList').innerHTML = pend.map(p => {
+    const c = preCands(p), late = t > spvDeadline(p.date), how = p.method === 'cash' ? 'plătită cash' : p.method === 'card' ? 'plătită cu cardul' : 'la termen';
+    const near = c.near.map(x => '<button type="button" class="chip" data-prelink="' + esc(p.date + '|' + p.id + '|' + x.key) + '">E fact. ' + esc(x.no) + ' din ' + dm5(x.date) + ', ' + m2(x.total) + ' lei</button>').join('');
+    return '<li class="h-item"><span>' + esc(p.sup) + '<small>' + how + ', marfă primită pe ' + dm5(p.date) + (p.no ? ', fact. ' + esc(p.no) : '') + '</small></span><span class="h-amt">' + m2(p.amount) + '</span>' +
+      '<p class="h-wait' + (late ? ' bad' : '') + '" style="grid-column:1/-1">' + (near ? 'Am găsit o factură asemănătoare. Dacă e aceeași, apas-o.' + (late ? ' Altfel: termenul de SPV a trecut pe ' + roDate(spvDeadline(p.date)) + ', cere factura furnizorului.' : '') : late ? 'Termenul de SPV a trecut pe ' + roDate(spvDeadline(p.date)) + ' și factura n-a apărut: cere-o furnizorului.' : 'Aștept factura din SPV; o leg singur când apare.') + '</p>' +
+      '<span class="q-pay" style="grid-column:1/-1">' + near + '<button type="button" class="chip' + (preArm === p.id ? ' bad' : '') + '" data-predel="' + esc(p.date + '|' + p.id) + '">' + (preArm === p.id ? 'Confirm ștergerea' : 'Șterge') + '</button></span></li>';
+  }).join('');
+  return pend;
+}
+function prePick(x){ PRE_SUP = x; $('#hPreQ').value = ''; renderPreForm(); setTimeout(() => $('#hPreAmt').focus(), 30); }
+function renderPreForm(){
+  const picked = !!PRE_SUP;
+  $('#hPrePicked').hidden = !picked; $('#hPreQ').closest('label').hidden = picked; $('#hPreSups').hidden = picked;
+  $('#hPreCuiL').hidden = !(picked && !PRE_SUP.cui); $('#hPreNameL').hidden = !(picked && PRE_SUP.byCui);
+  if (picked) { $('#hPreSup').textContent = PRE_SUP.name + (PRE_SUP.cui ? ' (CUI ' + PRE_SUP.cui + ')' : ''); return; }
+  const q = $('#hPreQ').value.trim(), hits = supSearch(q);
+  $('#hPreSups').innerHTML = hits.map((x, i) => '<button type="button" class="h-sup" data-supi="' + i + '">' + esc(x.name) + '<small>' + (x.cui ? 'CUI ' + x.cui : 'fără CUI') + '</small></button>').join('') +
+    (q.length >= 3 && !/^\d+$/.test(q) && !hits.some(x => norm(x.name) === norm(q)) ? '<button type="button" class="h-sup new" data-supnew="1">Furnizor nou: „' + esc(q) + '”<small>nu l-am mai văzut; îl adaug</small></button>' : '') +
+    (q && /^\d{6,10}$/.test(q) && !hits.length ? '<button type="button" class="h-sup new" data-supnew="cui">Furnizor nou cu CUI ' + esc(q) + '<small>scrii numele după</small></button>' : '');
+  $('#hPreSups').dataset.q = q; PRE_HITS = hits;
+}
+let PRE_HITS = [];
+$('#hPreOpen').addEventListener('click', () => {
+  PRE_SUP = null; ['hPreQ', 'hPreAmt', 'hPreNo', 'hPreCui', 'hPreName'].forEach(id => { $('#' + id).value = ''; });
+  document.querySelectorAll('input[name="hPreM"]').forEach(r => { r.checked = false; });
+  $('#hPreDate').value = today(); $('#hPreDate').max = today();
+  $('#hPreBox').hidden = false; $('#hPreOpen').hidden = true; renderPreForm();
+  setTimeout(() => { $('#hPreBox').scrollIntoView({block: 'start', behavior: 'smooth'}); $('#hPreQ').focus({preventScroll: true}); }, 30);
+});
+$('#hPreCancel').addEventListener('click', () => { $('#hPreBox').hidden = true; $('#hPreOpen').hidden = false; PRE_SUP = null; });
+$('#hPreQ').addEventListener('input', renderPreForm);
+$('#hPreSups').addEventListener('click', e => {
+  const b = e.target.closest('.h-sup'); if (!b) return;
+  const q = $('#hPreSups').dataset.q || '';
+  if (b.dataset.supnew === 'cui') prePick({cui: q, name: 'CUI ' + q, fresh: true, byCui: true});
+  else if (b.dataset.supnew) prePick({cui: '', name: q, fresh: true});
+  else prePick(PRE_HITS[+b.dataset.supi]);
+});
+$('#hPreRe').addEventListener('click', () => { PRE_SUP = null; renderPreForm(); $('#hPreQ').focus(); });
+$('#hPreSave').addEventListener('click', async () => {
+  if (!PRE_SUP) { toast('Alege furnizorul: scrie o parte din nume sau din CUI.', 'bad'); return; }
+  const amt = leiNum($('#hPreAmt').value), m = (document.querySelector('input[name="hPreM"]:checked') || {}).value, date = $('#hPreDate').value, no = $('#hPreNo').value.trim();
+  const cui = PRE_SUP.cui || digits($('#hPreCui').value);
+  if (!(amt > 0)) { toast('Scrie suma de pe factură.', 'bad'); return; }
+  if (!m) { toast('Alege cum ai plătit: cash, card sau la termen.', 'bad'); return; }
+  if (!isoOk(date) || date > today()) { toast('Alege ziua în care ai primit marfa (nu poate fi în viitor).', 'bad'); return; }
+  const p = {id: uid(), cui, sup: PRE_SUP.byCui ? ($('#hPreName').value.trim() || PRE_SUP.name) : PRE_SUP.name, amount: round2(amt), no, method: m, key: '', at: new Date().toISOString()};
+  const d = getDay(date); d.pre = (d.pre || []).concat([p]);
+  if (m !== 'later') d.out.push({id: uid(), kind: 'inv', key: 'pre:' + p.id, preId: p.id, sup: p.sup, invNo: no, invDate: '', method: m, label: 'Plată factură ' + p.sup + (no ? ' nr. ' + no : '') + ', marfă primită pe ' + roDate(date), doc: no, amount: p.amount});
+  await putDay(d);
+  $('#hPreBox').hidden = true; $('#hPreOpen').hidden = false; PRE_SUP = null;
+  await matchPre();
+  const linked = (getDay(date).pre || []).find(y => y.id === p.id).key;
+  const warn = m === 'cash' && p.amount > 5000 ? ' Atenție: Legea 70/2015 permite cel mult 5.000 lei cash pe zi către același furnizor.' : '';
+  const early = startSet() && date < S.start.date ? ' Ziua e înainte de data de start, deci nu intră în registrul de casă.' : '';
+  renderHome(); renderCasa();
+  toast(linked ? 'Factura era deja în aplicație: am trecut-o ' + (m === 'cash' ? 'plătită cash' : m === 'card' ? 'plătită cu cardul' : 'la termen') + '.' + warn :
+    'Am notat: ' + p.sup + ', ' + m2(p.amount) + ' lei, ' + (m === 'cash' ? 'plătită cash pe ' + dm5(date) + '; banii au ieșit din casă în ziua asta' : m === 'card' ? 'plătită cu cardul pe ' + dm5(date) + ' (nu atinge casa)' : 'la termen') + '. Când apare factura în SPV, o leg singur.' + warn + early, warn ? 'bad' : 'ok');
+});
+$('#hPreList').addEventListener('click', async e => {
+  const l = e.target.closest('[data-prelink]');
+  if (l) { const parts = l.dataset.prelink.split('|'), date = parts[0], id = parts[1], key = parts.slice(2).join('|');
+    const p = prePending().find(y => y.id === id && y.date === date), x = invStatus().find(y => y.key === key);
+    if (p && x) { const msg = await linkPre(p, x); payChanged(); toast(msg, 'ok'); } return; }
+  const b = e.target.closest('[data-predel]'); if (!b) return;
+  const [date, id] = b.dataset.predel.split('|');
+  if (preArm !== id) { preArm = id; renderHome(); setTimeout(() => { if (preArm === id) { preArm = null; renderHome(); } }, 6000); return; }
+  preArm = null; const d = getDay(date); d.pre = (d.pre || []).filter(p => p.id !== id); d.out = d.out.filter(o => o.preId !== id); await putDay(d); payChanged(); toast('Am șters marfa notată (și plata ei, dacă era).', 'ok');
+});
+
 /* ================= Acasă ================= */
 // one screen with the jobs of the shop: invoices (and how they were paid), the Z sales of the days left behind, the NIRs that can be issued
 let HOME_NOTE = null;
@@ -3966,8 +4196,12 @@ function renderHome(){
   $('#hPayMore').innerHTML = (nOpen > 6 ? 'Și încă ' + (nOpen - 6) + ': apar aici după ce le alegi pe cele de sus. ' : '') +
     (lat.length ? (lat.length === 1 ? 'O factură la termen neplătită' : lat.length + ' facturi la termen neplătite') + ' (' + m2(lat.reduce((a, x) => a + x.left, 0)) + ' lei). <button class="h-link" type="button" id="hLater">Am plătit una</button>' : '');
   $('#hPayMore').hidden = !$('#hPayMore').innerHTML;
-  $('#hInvState').textContent = nOpen ? (nOpen === 1 ? '1 de ales' : nOpen + ' de ales') : 'la zi';
-  $('#hInv').className = 'h-block ' + (nOpen ? 'todo' : 'done');
+  const pend = renderPre(), lateP = pend.filter(p => t > spvDeadline(p.date)).length;
+  if (lateP) todo.push(lateP === 1 ? 'o factură primită care n-a apărut în SPV' : lateP + ' facturi primite care n-au apărut în SPV');
+  if (PRE_NOTE && Date.now() - PRE_NOTE.at < 6 * 3600e3) $('#hInvLine').innerHTML = esc(PRE_NOTE.msg) + ($('#hInvLine').innerHTML ? ' ' + $('#hInvLine').innerHTML : '');
+  $('#hInvState').textContent = nOpen ? (nOpen === 1 ? '1 de ales' : nOpen + ' de ales') : pend.length ? (pend.length === 1 ? '1 așteaptă SPV' : pend.length + ' așteaptă SPV') : 'la zi';
+  $('#hInv').className = 'h-block ' + (nOpen || lateP ? 'todo' : 'done');
+  $('#hScan').classList.toggle('primary', FOLDER.ok && !FOLDER.set);
   // Z sales
   const zd = zDays(), past = zd.filter(x => x < t);
   $('#hZ').hidden = !ok;
@@ -4078,7 +4312,7 @@ $('#hAskGo').addEventListener('click', async () => {
 $('#hQueue').addEventListener('click', () => { showTab('nir'); setTimeout(() => $('#qSec').scrollIntoView({block: 'start', behavior: 'smooth'}), 60); });
 $('#hRepGo').addEventListener('click', e => { if (S.repEmail.trim()) sendReport(e.target.dataset.ym); else repSetup(); });
 $('#hRepDone').addEventListener('click', e => { markSent(e.target.dataset.ym); renderHome(); toast('Am notat ' + monthName(e.target.dataset.ym) + ' ca trimis.', 'ok'); });
-loadDays().then(() => { renderCasa(); renderGest(); renderQueue(); renderHome(); });
+loadDays().then(async () => { renderCasa(); renderGest(); renderQueue(); renderHome(); await matchPre(); });
 
 /* ---------------- runtime capabilities (only inside Claude) ---------------- */
 if (window.claude && typeof window.claude.use === 'function') {
@@ -4134,6 +4368,7 @@ loadRegister().then(loadQueue).then(async () => {
   const first = S.example ? qSorted()[0] : null;
   if (first) applyInvoice(first.inv, false);
   else { if (S.example) S.nirNo = String(nextNr()); render(); }
+  await matchPre();
   await FOLDER.load(); renderSrc(); scanSource(false);
 });
 })();
