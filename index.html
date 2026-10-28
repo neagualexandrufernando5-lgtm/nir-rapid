@@ -1000,10 +1000,17 @@ function parseAnafPdf(pages){
   const hasHeader = pages.some(pg => pg.some(i => /^denumire produs/.test(norm(i.s))));
   if (!title || !hasHeader) throw new NotAnaf('format');
   const near = (a, b, t) => Math.abs(a.y - b.y) <= (t || 2);
-  const number = p0.filter(i => i !== title && near(i, title) && i.x > title.x).map(i => i.s).join(' ').trim();
+  let number = p0.filter(i => i !== title && near(i, title) && i.x > title.x).map(i => i.s).join(' ').trim();
+  if (!number) {
+    // a long number wrapped over two lines beside the title ("ABCDE-" above, "L1234567" below)
+    const band = Math.max(title.h || 0, 8) * 1.4;
+    const parts = p0.filter(i => i !== title && i.x >= title.x + (title.w || 0) - 1 && Math.abs(i.y - title.y) <= band && !/^(data|cota|termen|seria|nr\b|pagina)/.test(norm(i.s))).sort((a, b) => b.y - a.y || a.x - b.x);
+    number = parts.reduce((acc, i) => !acc ? i.s : /[-\/.]$/.test(acc) || /^[-\/.]/.test(i.s) ? acc + i.s : acc + ' ' + i.s, '').trim();
+  }
   const all0 = p0.map(i => i.s).join('\n');
-  const dm = /Data emiterii:?\s*(\d{2})[.\/-](\d{2})[.\/-](\d{4})/i.exec(all0);
-  const dd = /Termen(?:ul)?\s+(?:de\s+)?plat[aă]:?\s*(\d{2})[.\/-](\d{2})[.\/-](\d{4})/i.exec(all0);
+  // the labels may break over two lines ("Data" / "emiterii: 23.10.2026"), with other text in between
+  const dm = /Data\s+emiterii:?\s*(\d{2})[.\/-](\d{2})[.\/-](\d{4})/i.exec(all0) || /\bemiterii:?\s*(\d{2})[.\/-](\d{2})[.\/-](\d{4})/i.exec(all0);
+  const dd = /Termen(?:ul)?\s+(?:de\s+)?plat[aă]:?\s*(\d{2})[.\/-](\d{2})[.\/-](\d{4})/i.exec(all0) || /\bplat[aă]:\s*(\d{2})[.\/-](\d{2})[.\/-](\d{4})/i.exec(all0);
   const cota = p0.find(i => /cota tva/i.test(i.s));
   const rates = cota ? [...cota.s.matchAll(/(\d+(?:[.,]\d+)?)\s*%/g)].map(m => parseFloat(m[1].replace(',', '.'))) : [];
   const supL = p0.find(i => /^furnizor:?$/i.test(i.s)), cliL = p0.find(i => /^(client|cumparator|cumpărător|beneficiar):?$/i.test(i.s));
