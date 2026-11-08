@@ -135,6 +135,10 @@ button.chip.on{background:var(--carbon);border-color:var(--carbon);color:var(--o
 .reg-item .l-sub{grid-column:1}
 .reg-btns{grid-column:2;grid-row:1/span 2;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .reg-btns .chip{cursor:pointer}
+.redit-btns{display:flex;gap:8px;flex-wrap:wrap}
+.redit-btns .chip{cursor:pointer;padding:8px 12px}
+.redit-btns .chip:disabled{opacity:.45;cursor:not-allowed}
+@media (max-width:560px){.reg-item{grid-template-columns:minmax(0,1fr)}.reg-item .l-sub{grid-column:1}.reg-btns{grid-column:1;grid-row:auto;justify-content:flex-start}}
 .reg-actions{display:flex;gap:8px;flex-wrap:wrap}
 .reg-actions .btn{font-size:.85rem;padding:8px 12px}
 .reg-note{font-size:.78rem;color:var(--ink-2)}
@@ -2942,7 +2946,7 @@ $('#btnPdf').addEventListener('click', () => issue('pdf'));
 $('#btnXlsx').addEventListener('click', () => issue('xlsx'));
 
 /* ---------------- register: list, storno, journal, backup ---------------- */
-let stornoArm = null, redateArm = null;
+let stornoArm = null;
 async function rollbackPrices(rec){
   // prices remembered from a cancelled NIR return to the last valid NIR that had the product (or are forgotten)
   for (const row of rec.model.rows || []) {
@@ -2963,8 +2967,8 @@ async function rollbackPrices(rec){
 }
 /* ---- renumbering: a late invoice put back in the order of the dates ---- */
 // from the first NIR whose date is later than a NIR after it, the same numbers are handed out again in date order
-function reorderPlan(){
-  const list = REG.slice().sort((a, b) => a.nr - b.nr), n = list.length;
+function reorderPlan(src){
+  const list = (src || REG).slice().sort((a, b) => a.nr - b.nr), n = list.length;
   if (n < 2) return null;
   const suf = new Array(n + 1).fill('9999-12-31');
   for (let i = n - 1; i >= 0; i--) suf[i] = !list[i].stornoOf && list[i].date < suf[i + 1] ? list[i].date : suf[i + 1];
@@ -2995,12 +2999,13 @@ $('#reorderBox').addEventListener('click', async e => {
   reArm = false; if (DIR.set) DIR.grant();
   await applyReorder();
 });
-async function applyReorder(){
+async function applyReorder(pre){
+  pre = pre || {};
   const plan = reorderPlan(); if (!plan || plan.why || !plan.moves.length || busy || BATCH_RUNNING) return;
   if (!STORE_OK) { toast('Browserul nu păstrează registrul aici.', 'bad'); return; }
   // a copy first: if it cannot be saved, nothing changes
-  let saved = false;
-  try { saved = await saveBlob('NIR-rapid-copie-inainte-de-renumerotare_' + today() + '.json', new Blob([JSON.stringify(backupData())], {type: 'application/json'})); } catch (e) { saved = false; }
+  let saved = !!pre.skipBackup;
+  if (!saved) try { saved = await saveBlob('NIR-rapid-copie-inainte-de-renumerotare_' + today() + '.json', new Blob([JSON.stringify(backupData())], {type: 'application/json'})); } catch (e) { saved = false; }
   if (!saved) { toast('Copia de siguranță nu s-a putut salva, așa că nu am schimbat nimic.', 'bad'); return; }
   SAVE_NOTE = '';
   const map = new Map(plan.moves.map(m => [m.from, m.to])), at = new Date().toISOString();
@@ -3018,23 +3023,40 @@ async function applyReorder(){
     for (const [name, date] of old) if (DIR.set && await DIR.remove(name, date)) removed++;
     for (const r of puts.slice().sort((a, b) => a.nr - b.nr)) { try { if (await downloadModel(r.model, 'pdf', r.invKey)) pdfs++; } catch (e) {} }
     const note = SAVE_NOTE; SAVE_NOTE = '';
-    toast('Gata: ' + plan.moves.map(m => m.from + ' a devenit ' + m.to).join(', ') + '. Am salvat din nou ' + pdfs + (pdfs === 1 ? ' PDF' : ' PDF-uri') + ' cu numerele noi' +
+    toast((pre.msg ? pre.msg + ' ' : '') + 'Numerele: ' + plan.moves.map(m => m.from + ' a devenit ' + m.to).join(', ') + '. Am salvat din nou ' + pdfs + (pdfs === 1 ? ' PDF' : ' PDF-uri') + ' cu numerele noi' +
       (DIR.set ? (removed ? ' și am șters din dosar ' + (removed === 1 ? 'fișierul vechi' : 'cele ' + removed + ' fișiere vechi') : '') + '.' : '. Șterge din Descărcări PDF-urile vechi: ' + old.map(o => o[0]).join(', ') + '.') +
       ' Copia de dinainte e salvată. Dacă ai dat deja contabilei aceste NIR-uri sau raportul de gestiune al acelor zile, dă-i variantele noi.' + (note ? ' ' + note : ''), 'ok');
   } finally { busy = false; render(); renderRegister(); renderGest(); renderHome(); }
 }
-// a NIR registered in a later month than its invoice (e.g. October invoice, November NIR) goes back to the invoice date;
-// then the numbers no longer follow the dates and "Renumerotează" puts it in its place
+// changing the date of an issued NIR (e.g. invoice of 29.10, NIR made on 30.10): the stock book follows by itself,
+// the cash book does not change (payments belong to the invoice and to the day the money left), the numbers are put back in date order
+function redateCheck(rec, to){
+  const from = rec.date, t = today();
+  if (!(rec.status === 'emis' && !rec.stornoOf)) return 'Doar un NIR emis și nestornat își poate schimba data.';
+  if (!isoOk(to)) return 'Alege data.';
+  if (to === from) return 'E chiar data de acum a NIR-ului.';
+  if (to > t) return 'Data nu poate fi în viitor.';
+  if (isoOk(rec.invDate) && to < rec.invDate) return 'NIR-ul nu poate fi înainte de data facturii (' + roDate(rec.invDate) + ').';
+  if (startSet() && to < S.start.date) return 'E înainte de ziua de start (' + roDate(S.start.date) + '): marfa de atunci e deja în soldul de pornire.';
+  const sent = [...new Set([monthOf(from), monthOf(to)])].filter(m => S.sent && S.sent[m]);
+  if (sent.length) return 'Raportul pe ' + sent.map(monthName).join(' și ') + ' a plecat deja la contabilă, iar ce i-ai trimis nu se mai schimbă. Spune-i ei.';
+  return '';
+}
+function redatePreview(rec, to){
+  const bad = redateCheck(rec, to); if (bad) return {ok: false, text: bad};
+  const plan = reorderPlan(REG.map(r => r.nr === rec.nr ? Object.assign({}, r, {date: to}) : r));
+  const nums = !plan || !plan.moves.length ? 'Numerele NIR rămân la fel.' : plan.why ? 'Numerele nu le pot pune în ordinea datelor: ' + plan.why + '.' : 'Numerele se pun în ordinea datelor: ' + plan.moves.map(m => m.from + ' devine ' + m.to).join(', ') + '.';
+  return {ok: true, text: 'NIR-ul ' + rec.nr + ' trece de pe ' + roDate(rec.date) + ' pe ' + roDate(to) + (monthOf(to) !== monthOf(rec.date) ? ', în ' + monthName(monthOf(to)) : '') + '. ' + nums +
+    ' Gestiunea se reface singură; casa nu se schimbă, pentru că plățile țin de factură și de ziua în care au ieșit banii. Fac întâi o copie de siguranță și salvez din nou PDF-urile.'};
+}
 async function redateNir(rec, to){
   const from = rec.date;
-  if (busy || BATCH_RUNNING || !(rec.status === 'emis' && !rec.stornoOf && isoOk(to) && to < from)) return;
-  if (!STORE_OK) { toast('Browserul nu păstrează registrul aici.', 'bad'); return; }
-  const sent = [...new Set([monthOf(from), monthOf(to)])].filter(m => S.sent && S.sent[m]);
-  if (sent.length) { toast('Nu mut NIR-ul: raportul pe ' + sent.map(monthName).join(' și ') + ' a plecat deja la contabilă, iar ce i-ai trimis nu se mai schimbă. Spune-i ei de factura întârziată.', 'bad'); return; }
-  if (startSet() && to < S.start.date) { toast('Factura e dinainte de ziua de start (' + roDate(S.start.date) + '), deci marfa ei e deja în soldul de pornire. Nu mut NIR-ul.', 'bad'); return; }
+  if (busy || BATCH_RUNNING) return null;
+  const bad = redateCheck(rec, to); if (bad) { toast(bad, 'bad'); return null; }
+  if (!STORE_OK) { toast('Browserul nu păstrează registrul aici.', 'bad'); return null; }
   let saved = false;
-  try { saved = await saveBlob('NIR-rapid-copie-inainte-de-mutare_' + today() + '.json', new Blob([JSON.stringify(backupData())], {type: 'application/json'})); } catch (e) { saved = false; }
-  if (!saved) { toast('Copia de siguranță nu s-a putut salva, așa că nu am schimbat nimic.', 'bad'); return; }
+  try { saved = await saveBlob('NIR-rapid-copie-inainte-de-schimbarea-datei_' + today() + '.json', new Blob([JSON.stringify(backupData())], {type: 'application/json'})); } catch (e) { saved = false; }
+  if (!saved) { toast('Copia de siguranță nu s-a putut salva, așa că nu am schimbat nimic.', 'bad'); return null; }
   SAVE_NOTE = '';
   const oldName = modelFileName(rec.model, 'pdf'), at = new Date().toISOString();
   const r = JSON.parse(JSON.stringify(rec)); r.date = to; r.model.date = to; r.redated = (r.redated || []).concat([{from, to, at}]);
@@ -3042,17 +3064,30 @@ async function redateNir(rec, to){
   busy = true;
   try {
     try { await IDB.put('nir', r); if (pr.length) await IDB.putMany('prices', pr); }
-    catch (e) { await loadRegister(); toast('Mutarea nu a reușit; NIR-ul a rămas cum era.', 'bad'); return; }
+    catch (e) { await loadRegister(); toast('Schimbarea datei nu a reușit; NIR-ul a rămas cum era.', 'bad'); return null; }
     await loadRegister(); BUY = null; EST.clear(); repCache = null;
     for (const date of [from, to]) { const d = getDay(date); if (d.gestSig) { d.gestSig = 'mutat'; await putDay(d); } }
     const removed = DIR.set ? await DIR.remove(oldName, from) : false;
     let ok = false; try { ok = await downloadModel(r.model, 'pdf', r.invKey); } catch (e) {}
     SAVE_NOTE = '';
-    const plan = reorderPlan();
-    toast('NIR-ul ' + r.nr + ' are acum data ' + roDate(to) + ' și intră în gestiunea din ' + monthName(monthOf(to)) + '.' +
-      (ok ? ' Am salvat din nou PDF-ul' + (removed ? ' în dosarul lunii și l-am șters pe cel vechi' : DIR.set ? '' : '; șterge din Descărcări pe cel vechi (' + oldName + ')') + '.' : '') +
-      (plan && plan.moves.length ? (plan.why ? ' Numerele nu le pot muta: ' + plan.why + '.' : ' Acum, sus în registru, apasă „Renumerotează”, ca să primească numărul de la locul lui.') : ''), 'ok');
+    return ['NIR-ul ' + r.nr + ' are acum data ' + roDate(to) + (monthOf(to) !== monthOf(from) ? ' și intră în gestiunea din ' + monthName(monthOf(to)) : '') + '.',
+      ok ? ' Am salvat din nou PDF-ul' + (removed ? (monthOf(to) !== monthOf(from) ? ' în dosarul lunii lui și l-am șters pe cel vechi' : '') : DIR.set ? '' : '; șterge din Descărcări pe cel vechi (' + oldName + ')') + '.' : ''];
   } finally { busy = false; render(); renderRegister(); renderGest(); renderHome(); }
+}
+// one step for you: the date, then the numbers in date order, then one message
+async function moveNir(rec, to){
+  const res = await redateNir(rec, to); if (!res) return;
+  const plan = reorderPlan();
+  if (plan && plan.moves.length && !plan.why) await applyReorder({skipBackup: true, msg: res[0]});
+  else toast(res[0] + res[1] + (plan && plan.moves.length && plan.why ? ' Numerele nu le pot pune în ordinea datelor: ' + plan.why + '.' : '') + ' Copia de dinainte e salvată. Dacă i-ai dat deja contabilei NIR-ul sau raportul de gestiune al acelor zile, dă-i varianta nouă.', 'ok');
+}
+let REDIT = null;   // {nr, to}: the NIR whose date you are changing
+function reditHtml(r){
+  const pv = redatePreview(r, REDIT.to), lo = [isoOk(r.invDate) ? r.invDate : '', startSet() ? S.start.date : ''].filter(Boolean).sort().pop() || '';
+  return '<span class="redit" style="grid-column:1/-1;display:grid;gap:8px;padding:10px;margin-top:6px;border-radius:10px;background:var(--carbon-soft)">' +
+    '<label class="f">Data nouă a NIR-ului ' + r.nr + '<input type="date" id="reditDate" value="' + esc(REDIT.to || '') + '"' + (lo ? ' min="' + lo + '"' : '') + ' max="' + today() + '"></label>' +
+    '<span class="l-sub" id="reditPrev" style="color:' + (pv.ok ? 'var(--ink)' : 'var(--bad)') + '">' + esc(pv.text) + '</span>' +
+    '<span class="redit-btns"><button type="button" class="chip bad" data-reg="redo" data-nr="' + r.nr + '"' + (pv.ok ? '' : ' disabled') + '>Schimbă data</button><button type="button" class="chip" data-reg="rclose" data-nr="' + r.nr + '">Renunță</button></span></span>';
 }
 function renderRegister(){
   renderReorder();
@@ -3067,25 +3102,28 @@ function renderRegister(){
     const canStorno = r.status === 'emis' && !r.stornoOf;
     return '<li class="reg-item"><span><b>NIR ' + esc((r.serie ? r.serie + ' ' : '') + r.nr) + '</b> · ' + roDate(r.date) + ' · ' + esc(r.supName) + '</span>' +
       '<span class="reg-btns"><button type="button" class="chip std" data-reg="pdf" data-nr="' + r.nr + '">PDF</button><button type="button" class="chip std" data-reg="xlsx" data-nr="' + r.nr + '">Excel</button>' +
+      (canStorno ? '<button type="button" class="chip" data-reg="redit" data-nr="' + r.nr + '">Schimbă data</button>' : '') +
       (canStorno ? '<button type="button" class="chip' + (stornoArm === r.nr ? ' bad' : '') + '" data-reg="storno" data-nr="' + r.nr + '">' + (stornoArm === r.nr ? 'Confirm storno NIR ' + r.nr : 'Stornează') + '</button>' : '') + '</span>' +
       '<span class="l-sub">fact. ' + esc(r.invNo) + ' din ' + roDate(r.invDate) + ' · ' + lei(r.model.totals.val) + ' la vânzare ' + st + '</span>' +
-      (canStorno && isoOk(r.invDate) && r.invDate < r.date && monthOf(r.invDate) !== monthOf(r.date) ? '<span class="l-sub" style="grid-column:1/-1">NIR-ul e din ' + monthName(monthOf(r.date)) + ', factura din ' + monthName(monthOf(r.invDate)) + '. <button type="button" class="chip' + (redateArm === r.nr ? ' bad' : '') + '" data-reg="redate" data-nr="' + r.nr + '">' + (redateArm === r.nr ? 'Confirm: mută pe ' + roDate(r.invDate) : 'Mută NIR-ul pe ' + roDate(r.invDate)) + '</button></span>'
-        : canStorno && !isoOk(r.invDate) ? '<span class="l-sub" style="grid-column:1/-1">Data facturii nu a fost citită. Dacă marfa a venit în altă zi decât ' + roDate(r.date) + ': <input type="date" class="redate-in" data-nr="' + r.nr + '" max="' + r.date + '" style="width:auto;display:inline-block;padding:4px 6px"> <button type="button" class="chip' + (redateArm === r.nr ? ' bad' : '') + '" data-reg="redate" data-nr="' + r.nr + '">' + (redateArm === r.nr ? 'Confirm mutarea' : 'Mută NIR-ul') + '</button></span>' : '') +
+      (canStorno && isoOk(r.invDate) && r.invDate < r.date && monthOf(r.invDate) !== monthOf(r.date) && !(REDIT && REDIT.nr === r.nr) ? '<span class="l-sub" style="grid-column:1/-1">NIR-ul e din ' + monthName(monthOf(r.date)) + ', factura din ' + monthName(monthOf(r.invDate)) + '. <button type="button" class="chip" data-reg="redit" data-to="' + r.invDate + '" data-nr="' + r.nr + '">Pune NIR-ul pe ' + roDate(r.invDate) + '</button></span>' : '') +
+      (REDIT && REDIT.nr === r.nr ? reditHtml(r) : '') +
       payLine + '</li>';
   }).join('');
 }
+$('#regList').addEventListener('input', e => {
+  if (e.target.id !== 'reditDate' || !REDIT) return;
+  REDIT.to = e.target.value; const rec = REG.find(r => r.nr === REDIT.nr); if (!rec) return;
+  const pv = redatePreview(rec, REDIT.to), el = $('#reditPrev'), btn = $('#regList [data-reg="redo"]');
+  if (el) { el.textContent = pv.text; el.style.color = pv.ok ? 'var(--ink)' : 'var(--bad)'; } if (btn) btn.disabled = !pv.ok;
+});
 $('#regList').addEventListener('click', async e => {
   const p = e.target.closest('[data-qpay]'); if (p) { await payBtn(p, 'reg'); return; }
   const t = e.target.closest('[data-reg]'); if (!t) return;
   const rec = REG.find(r => r.nr === +t.dataset.nr); if (!rec) return;
   if (t.dataset.reg === 'pdf' || t.dataset.reg === 'xlsx') { try { await downloadModel(rec.model, t.dataset.reg, rec.stornoOf ? null : rec.invKey); toast('NIR nr. ' + rec.nr + ' descărcat din registru.' + ATTACH_NOTE, 'ok'); } catch (err) { saveErr(err, t.dataset.reg === 'pdf' ? 'PDF' : 'Excel'); } return; }
-  if (t.dataset.reg === 'redate') {
-    if (redateArm !== rec.nr) { const inp0 = $('#regList input.redate-in[data-nr="' + rec.nr + '"]'), keep = inp0 ? inp0.value : ''; redateArm = rec.nr; renderRegister(); const inp1 = $('#regList input.redate-in[data-nr="' + rec.nr + '"]'); if (inp1) inp1.value = keep; setTimeout(() => { if (redateArm === rec.nr) { redateArm = null; renderRegister(); } }, 6000); return; }
-    const inp = $('#regList input.redate-in[data-nr="' + rec.nr + '"]'), to = isoOk(rec.invDate) ? rec.invDate : (inp && inp.value) || '';
-    if (!isoOk(to) || to >= rec.date) { redateArm = null; renderRegister(); toast('Alege ziua în care a venit marfa; trebuie să fie înainte de ' + roDate(rec.date) + '.', 'bad'); return; }
-    redateArm = null; if (DIR.set) DIR.grant();
-    await redateNir(rec, to); return;
-  }
+  if (t.dataset.reg === 'redit') { REDIT = {nr: rec.nr, to: t.dataset.to || (isoOk(rec.invDate) && rec.invDate !== rec.date ? rec.invDate : rec.date)}; renderRegister(); setTimeout(() => { const el = $('#reditDate'); if (el) el.scrollIntoView({block: 'center', behavior: 'smooth'}); }, 30); return; }
+  if (t.dataset.reg === 'rclose') { REDIT = null; renderRegister(); return; }
+  if (t.dataset.reg === 'redo') { const to = REDIT && REDIT.nr === rec.nr ? REDIT.to : ''; if (!redatePreview(rec, to).ok) return; REDIT = null; if (DIR.set) DIR.grant(); await moveNir(rec, to); return; }
   if (t.dataset.reg === 'storno') {
     if (stornoArm !== rec.nr) { stornoArm = rec.nr; renderRegister(); setTimeout(() => { if (stornoArm === rec.nr) { stornoArm = null; renderRegister(); } }, 6000); return; }
     stornoArm = null;
