@@ -277,6 +277,20 @@ body[data-tab="casa"] .lede,body[data-tab="gest"] .lede{display:none}
 .h-head h2{font-family:var(--f-display);font-stretch:80%;font-weight:700;font-size:1.75rem;line-height:1.1}
 .h-head p{color:var(--ink-2);font-size:.98rem}
 .h-head p.ok{color:var(--ok)}
+.h-find{display:grid;gap:8px}
+.h-find input[type=search]{font:17px var(--f-body);color:var(--ink);background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:13px 14px;width:100%;min-width:0;-webkit-appearance:none;appearance:none}
+.f-list{list-style:none;margin:0;padding:0;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+.f-item + .f-item{border-top:1px solid var(--rule)}
+.f-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:start;width:100%;text-align:left;padding:12px 14px;background:none;border:0;font:inherit;color:inherit;cursor:pointer}
+.f-name{font-weight:600;overflow-wrap:anywhere}
+.f-name small{display:block;font-weight:400;color:var(--ink-2);font-size:.8rem;margin-top:2px}
+.f-price{font:600 1.2rem var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.f-price small{display:block;font:400 .75rem var(--f-body);color:var(--ink-2)}
+.f-price.est{color:var(--carbon)}
+.f-more{display:grid;gap:5px;padding:0 14px 13px;color:var(--ink-2);font-size:.88rem;line-height:1.4}
+.f-more b{color:var(--ink);font-weight:600}
+.f-more .q{padding:8px 10px;border-radius:8px;background:var(--carbon-soft);color:var(--ink)}
+.f-foot{display:flex;justify-content:space-between;gap:10px;align-items:baseline;color:var(--ink-2);font-size:.85rem;padding:0 4px}
 .h-block{display:grid;gap:12px;padding:16px;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;border-left:4px solid var(--rule)}
 .h-block.todo{border-left-color:var(--carbon)}
 .h-block.done{border-left-color:var(--ok)}
@@ -347,6 +361,13 @@ details.help summary{cursor:pointer;font:600 .88rem var(--f-body);color:var(--ca
 
   <section class="tabpane home" id="paneHome" aria-label="Acasă">
     <div class="h-head"><h2 id="hDay"></h2><p id="hSum"></p></div>
+
+    <div class="h-find" id="hFind" hidden>
+      <label class="vh" for="hFindQ">Caută un produs</label>
+      <input type="search" id="hFindQ" placeholder="Caută un produs: afli prețul de raft" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+      <ol class="f-list" id="hFindList" hidden></ol>
+      <p class="f-foot" id="hFindFoot" hidden><span id="hFindNote"></span><button class="h-link" id="hFindClear" type="button">Șterge</button></p>
+    </div>
 
     <div class="h-block todo" id="hStart" hidden>
       <div class="h-row"><h3>De unde pornesc casa și marfa</h3></div>
@@ -2037,7 +2058,9 @@ function estimate(q){
   try {
     S.inv = q.inv; S.example = false; S.pdec = {}; S.nirDate = nirDateFor(q.inv); S.nirNo = String(nextNr()); S.estimating = true;
     const c = compute(q.inv);
-    e = {val: c.totals.val, cost: c.totals.cost, why: reasonOf(c, false)};
+    e = {val: c.totals.val, cost: c.totals.cost, why: reasonOf(c, false),
+      rows: c.rows.filter(r => r.qty > 0 && r.pv > 0 && !r.free).map(r => ({pk: r.pk, name: r.name, code: r.code, um: r.um, pv: r.pv, vat: r.vat, cost: r.unitCost, capped: !!r.capped,
+        pi: r.priceInfo ? {mode: r.priceInfo.mode, old: r.priceInfo.old, rule: r.priceInfo.rule, okKeep: r.priceInfo.okKeep !== false} : null}))};
   } catch (x) { e = null; }
   finally { Object.assign(S, keep); S.estimating = false; }
   EST.set(q.key, {sig, e});
@@ -4228,6 +4251,125 @@ $('#hPreList').addEventListener('click', async e => {
   preArm = null; const d = getDay(date); d.pre = (d.pre || []).filter(p => p.id !== id); d.out = d.out.filter(o => o.preId !== id); await putDay(d); payChanged(); toast('Am șters marfa notată (și plata ei, dacă era).', 'ok');
 });
 
+
+/* ---- caută un produs: ultimul preț de raft ---- */
+// words as they sound, so that "cracks" finds "Krax" and "cips" finds "Chips": the query and the names go through the same folding
+function pfold(s){
+  return norm(s).replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean).map(w => /^\d/.test(w) ? w :
+    w.replace(/ck/g, 'k').replace(/ch/g, 'k').replace(/ph/g, 'f').replace(/x/g, 'ks').replace(/[cq]/g, 'k').replace(/w/g, 'v').replace(/y/g, 'i').replace(/(.)\1+/g, '$1'));
+}
+// one typing mistake: a letter changed, missing, extra, or two swapped
+function near1(a, b){
+  if (a === b) return true;
+  const la = a.length, lb = b.length; if (Math.abs(la - lb) > 1) return false;
+  let i = 0; while (i < la && i < lb && a[i] === b[i]) i++;
+  if (la === lb) return a.slice(i + 1) === b.slice(i + 1) || (a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2));
+  return la > lb ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
+}
+let PIDX = null, PIDXSIG = '', FIND_OPEN = '';
+// every product the app has seen: on issued NIRs (the price history), in the price memory, and on the invoices still in the queue (the proposed price)
+function prodIndex(){
+  const sig = [REG.length, REG.reduce((a, r) => (a * 31 + r.nr * 7 + (+String(r.date || '').replace(/-/g, '') || 0) + (r.status === 'emis' ? 1 : 0)) % 2147483647, 7), PRICES.size, QUEUE.map(q => q.key).join(','), estSig()].join('|');
+  if (PIDX && sig === PIDXSIG) return PIDX;
+  const m = new Map(), get = (pk, name) => { let p = m.get(pk); if (!p) { p = {pk, name: name || '', code: '', hist: [], queue: [], mem: null}; m.set(pk, p); } return p; };
+  for (const x of REG) {
+    if (x.stornoOf || x.status !== 'emis') continue;
+    for (const r of (x.model && x.model.rows) || []) {
+      if (!(r.qty > 0) || !(r.pv > 0)) continue;
+      const p = get(priceKey(r.code, norm(r.name)), r.name);
+      const same = p.hist.find(h => h.nr === x.nr && h.free === !!r.free && Math.abs(h.pv - r.pv) < 0.005);
+      if (same) same.qty += r.qty;
+      else p.hist.push({name: r.name, date: x.date, nr: x.nr, sup: x.supName || '', pv: r.pv, um: r.um || '', vat: r.vat, cost: r.free ? null : r.unitCost, qty: r.qty, free: !!r.free, capped: !!r.capped});
+      if (r.code) p.code = r.code;
+    }
+  }
+  PRICES.forEach((v, pk) => { if (v && typeof v.pv === 'number') get(pk, v.name || pk.slice(2)).mem = v; });
+  QUEUE.forEach(q => { const e = estimate(q); ((e && e.rows) || []).forEach(r => { const p = get(r.pk, r.name); if (r.code) p.code = r.code; p.queue.push(Object.assign({inv: q.inv}, r)); }); });
+  const list = [];
+  m.forEach(p => {
+    p.hist.sort((a, b) => a.date.localeCompare(b.date) || a.nr - b.nr);
+    const paid = p.hist.filter(h => !h.free), last = paid[paid.length - 1] || p.hist[p.hist.length - 1] || null, q0 = p.queue[0] || null;
+    p.name = (p.mem && p.mem.name) || (last && last.name) || p.name;
+    const src = (p.mem && p.hist.find(h => h.nr === p.mem.nr && !h.free)) || last;
+    p.price = p.mem ? p.mem.pv : last ? last.pv : q0 ? q0.pv : 0;
+    p.est = !p.mem && !last;                       // only on a queued invoice: the price is the one the rule proposes
+    p.um = (p.mem && p.mem.um) || (last && last.um) || (q0 && q0.um) || '';
+    p.vat = (last && last.vat != null ? last.vat : null); if (p.vat == null) p.vat = p.mem && p.mem.vat != null ? p.mem.vat : q0 ? q0.vat : null;
+    p.nr = p.mem ? p.mem.nr : last ? last.nr : null;
+    p.date = p.mem ? p.mem.date : last ? last.date : q0 ? (q0.inv.date || '') : '';
+    p.sup = src ? src.sup : q0 ? ((q0.inv.supplier && q0.inv.supplier.name) || '') : '';
+    p.last = last; p.paid = paid; p.freeOnly = !p.mem && !paid.length && !p.queue.length && p.hist.length > 0;
+    p.words = pfold(p.name); p.joined = p.words.join('');
+    if (p.price > 0 && p.name) list.push(p);
+  });
+  PIDX = list; PIDXSIG = sig;
+  return list;
+}
+function prodSearch(q){
+  const toks = pfold(q); if (!toks.length) return [];
+  const dg = /^\d{4,}$/.test(q.trim()) ? q.trim() : '', out = [];
+  for (const p of prodIndex()) {
+    let score = 0, fuzzy = false, ok = true;
+    for (const t of toks) {
+      let r = -1;
+      if (p.words.some(w => w.startsWith(t))) r = 0;
+      else if (p.joined.includes(t)) r = 1;
+      else if (dg && p.code && String(p.code).includes(dg)) r = 0;
+      else if (t.length >= 4 && !/^\d/.test(t) && p.words.some(w => w[0] === t[0] && (near1(t, w.slice(0, t.length)) || near1(t, w.slice(0, t.length - 1)) || near1(t, w.slice(0, t.length + 1))))) { r = 3; fuzzy = true; }
+      if (r < 0) { ok = false; break; }
+      score += r;
+    }
+    if (ok) out.push({score, fuzzy, p});
+  }
+  const exact = out.filter(x => !x.fuzzy), use = exact.length ? exact : out;   // near matches only when nothing matches as written
+  return use.sort((a, b) => a.score - b.score || (a.p.freeOnly ? 1 : 0) - (b.p.freeOnly ? 1 : 0) || (b.p.date || '').localeCompare(a.p.date || '') || a.p.name.localeCompare(b.p.name, 'ro')).map(x => x.p);
+}
+const pct1 = v => (Math.round(v * 10) / 10).toLocaleString('ro-RO', {maximumFractionDigits: 1});
+function findMore(p){
+  const L = [], per = p.um ? '/' + esc(p.um) : '', l = p.last;
+  const cost = l && l.cost > 0 ? l.cost : p.est && p.queue[0] && p.queue[0].cost > 0 ? p.queue[0].cost : null;
+  if (cost != null && p.vat != null) {
+    const net = p.price / (1 + p.vat / 100);
+    L.push('<span>Cost la ultima intrare: <b>' + m2(cost) + ' lei' + per + '</b> fără TVA. TVA ' + q3(p.vat) + '%, adaos <b>' + pct1((net / cost - 1) * 100) + '%</b>.</span>');
+  }
+  if (l) L.push('<span>Ultima intrare: ' + q3(l.qty) + ' ' + esc(l.um) + ' pe ' + roDate(l.date) + ', NIR ' + l.nr + (l.free ? ' (gratuit)' : '') + '.</span>');
+  const prev = []; let cur = p.price;
+  for (const h of p.paid.slice().reverse()) { if (Math.abs(h.pv - cur) >= 0.005) { prev.push(h); cur = h.pv; if (prev.length >= 3) break; } }
+  if (prev.length) L.push('<span>Prețuri mai vechi: ' + prev.map(h => m2(h.pv) + ' lei (' + roDate(h.date) + ')').join(', ') + '.</span>');
+  if ((l && l.capped) || (p.est && p.queue[0] && p.queue[0].capped)) L.push('<span>Adaos plafonat prin lege: prețul nu poate fi mai mare.</span>');
+  p.queue.slice(0, 2).forEach(r => {
+    const f = 'fact. ' + esc(r.inv.number || '') + ' din ' + roDate(r.inv.date), when = isoOk(r.inv.date) ? ' (din ' + roDate(readyDate(r.inv.date)) + ')' : '';
+    L.push('<span class="q">' + (p.est ? 'Marfa e pe ' + f + ', încă în coadă. ' + m2(r.pv) + ' lei e prețul propus de regula de adaos; se fixează când emiți NIR-ul' + when + '.'
+      : r.pi && r.pi.mode === 'new' ? 'În coadă, pe ' + f + ': la emiterea NIR-ului prețul trece la <b>' + m2(r.pi.rule) + ' lei</b>' + (r.pi.okKeep ? '' : ' (cel vechi ar fi sub cost sau peste plafonul legal)') + '.'
+      : r.pi ? 'În coadă, pe ' + f + ': regula de adaos ar da acum ' + m2(r.pi.rule) + ' lei; aplicația propune să păstrezi ' + m2(r.pv) + ' lei. Alegi la emiterea NIR-ului.'
+      : 'Mai vine marfă pe ' + f + ' (în coadă), la același preț.') + '</span>');
+  });
+  return L.join('');
+}
+function renderFind(){
+  const box = $('#hFind'); if (!box) return;
+  const idx = prodIndex(); box.hidden = !idx.length; if (!idx.length) return;
+  const q = $('#hFindQ').value.trim(), list = $('#hFindList'), foot = $('#hFindFoot');
+  if (!q) { list.hidden = true; list.innerHTML = ''; foot.hidden = true; return; }
+  const res = prodSearch(q), show = res.slice(0, 8);
+  if (show.length === 1) FIND_OPEN = show[0].pk;
+  list.hidden = !show.length;
+  list.innerHTML = show.map(p => {
+    const open = FIND_OPEN === p.pk;
+    return '<li class="f-item"><button type="button" class="f-row" data-pk="' + esc(p.pk) + '" aria-expanded="' + open + '"><span class="f-name">' + esc(p.name.replace(/^\([^()]{3,20}\)\s*/, '')) +
+      '<small>' + (p.est ? 'în coadă, fără NIR încă' : (p.freeOnly ? 'primit gratuit · ' : '') + (p.nr ? 'NIR ' + p.nr + ' din ' : 'din ') + roDate(p.date)) + (p.sup ? ' · ' + esc(p.sup) : '') + '</small></span>' +
+      '<span class="f-price' + (p.est ? ' est' : '') + '">' + m2(p.price) + '<small>' + (p.est ? 'propus, ' : '') + 'lei' + (p.um ? '/' + esc(p.um) : '') + '</small></span></button>' +
+      (open ? '<div class="f-more">' + findMore(p) + '</div>' : '') + '</li>';
+  }).join('');
+  foot.hidden = false;
+  $('#hFindNote').textContent = !res.length ? 'Niciun produs cu „' + q + '” pe NIR-urile emise sau pe facturile din coadă.'
+    : (res.length === 1 ? 'Un produs' : res.length + ' produse') + ', preț de raft cu TVA.' + (res.length > show.length ? ' Arăt primele ' + show.length + '; scrie mai mult ca să restrângi.' : res.length > 1 ? ' Atinge unul pentru cost și istoric.' : '');
+}
+$('#hFindQ').addEventListener('input', () => { FIND_OPEN = ''; renderFind(); });
+$('#hFindQ').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
+$('#hFindList').addEventListener('click', e => { const b = e.target.closest('.f-row'); if (!b) return; FIND_OPEN = FIND_OPEN === b.dataset.pk ? '' : b.dataset.pk; renderFind(); });
+$('#hFindClear').addEventListener('click', () => { $('#hFindQ').value = ''; FIND_OPEN = ''; renderFind(); $('#hFindQ').focus(); });
+
 /* ================= Acasă ================= */
 // one screen with the jobs of the shop: invoices (and how they were paid), the Z sales of the days left behind, the NIRs that can be issued
 let HOME_NOTE = null;
@@ -4258,6 +4400,7 @@ function renderHome(){
   if (!$('#paneHome') || $('#paneHome').hidden) return;
   const t = today(), ok = startSet(), st = invStatus(), todo = [];
   $('#hDay').textContent = dayLong(t);
+  renderFind();
   // first run: start balances
   $('#hStart').hidden = ok;
   if (!ok && !$('#hStDate').value) $('#hStDate').value = t.slice(0, 8) + '01';
@@ -4442,7 +4585,7 @@ ${[
 </Invoice>`;
 
 
-window.nirRapid = {tab: t => showTab(t), calc: inv => compute(inv), exportXlsx: () => buildXlsx(currentModel()), exportPdf: () => buildNirPdf(currentModel()), state: () => ({S, C, REG, PRICES, QUEUE, DAYS}), dates: {readyDate, spvDeadline, isWorkday}, reload: async () => { await loadRegister(); render(); renderCasa(); renderGest(); },
+window.nirRapid = {tab: t => showTab(t), find: q => prodSearch(q).map(p => ({name: p.name, price: p.price, um: p.um, est: p.est, nr: p.nr, date: p.date, sup: p.sup, freeOnly: p.freeOnly, hist: p.hist.length})), calc: inv => compute(inv), exportXlsx: () => buildXlsx(currentModel()), exportPdf: () => buildNirPdf(currentModel()), state: () => ({S, C, REG, PRICES, QUEUE, DAYS}), dates: {readyDate, spvDeadline, isWorkday}, reload: async () => { await loadRegister(); render(); renderCasa(); renderGest(); },
   books: to => { const c = cashBook(to), g = stockBook(to); return [...g.keys()].map(d => [d, c.get(d), (({prev, nir, pv, out, fin, gap, final}) => ({prev, nir, pv, out, fin, gap, final}))(g.get(d))]); }, payables: () => payables(), backup: () => backupData(),
   est: to => [...estBook(to)].map(([d, x]) => [d, x.estFin, x.qVal, x.qN, x.qBad, x.fin]), qest: () => QUEUE.map(q => [q.key, nirDateFor(q.inv), (estimate(q) || {}).val ?? null]),
   pdf: async (kind, from, to) => { const b = kind === 'cash' ? await buildCashPdf(from, to, false) : await buildGestPdf(from, to, false); const u8 = new Uint8Array(await b.arrayBuffer()); let s = ''; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(s); }};
